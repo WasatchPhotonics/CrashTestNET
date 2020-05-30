@@ -12,6 +12,9 @@ spectrometers work smoothly and well, while CrashTestNET was designed to beat th
 ever-living crap out of them and make them howl.  Mixing those two sets of 
 requirements into one app is just begging for trouble.
 
+Also, MultiChannelDemo has a specific focus on HW triggering, which is not 
+appropriate or useful for the majority of CrashTestNET's use cases.
+
 ## Threading
 
 At the moment I'm going with BackgroundWorkers, not because I don't understand 
@@ -20,4 +23,11 @@ Tasks).  We may add a Task option down the road.
 
 ## Backlog
 
-Add "Summary" tab with table of iterations, failures, shifts etc by spectrometer.
+- Add "Summary" tab with table of iterations, failures, shifts etc by spectrometer.
+- optional integration time throwaways
+- batch file wrapper for disconnects
+- misc readouts including temperature, version etc
+- track wavelength of boxcar-10 maxima vs shift threshold
+- static driver readout lock
+- static driver comms lock
+

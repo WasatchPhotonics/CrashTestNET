@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Reflection;
+using System.Data;
 
 namespace CrashTestNET
 {
@@ -26,10 +27,8 @@ namespace CrashTestNET
 
         bool running = false;
 
-        Dictionary<string, WasatchNET.Spectrometer> specs = new Dictionary<string, WasatchNET.Spectrometer>();
-        Dictionary<string, Series> serieses = new Dictionary<string, Series>();
-        Dictionary<string, BackgroundWorker> workers = new Dictionary<string, BackgroundWorker>();
-        Dictionary<string, bool> runnings = new Dictionary<string, bool>();
+        SortedDictionary<string, SpectrometerState> states = new SortedDictionary<string, SpectrometerState>();
+        BindingSource statusSource;
 
         WasatchNET.Logger logger = WasatchNET.Logger.getInstance();
 
@@ -73,20 +72,31 @@ namespace CrashTestNET
             {
                 var spec = driver.getSpectrometer(i);
                 var sn = spec.serialNumber;
-                specs[sn] = spec;
+                logger.info("Index {0}: model {1}, serial {2}, detector {3}, pixels {4}, range ({5:f2}, {6:f2}nm)",
+                    i, spec.model, spec.serialNumber, spec.eeprom.detectorName, spec.pixels,
+                    spec.wavelengths[0], spec.wavelengths[spec.pixels - 1]);
+
+                SpectrometerState state = new SpectrometerState(spec);
 
                 // init graphs
-                var s = new Series(sn);
-                s.ChartType = SeriesChartType.Line;
-                serieses[sn] = s;
-                chartAll.Series.Add(s);
+                state.series = new Series(sn);
+                state.series.ChartType = SeriesChartType.Line;
+                chartAll.Series.Add(state.series);
 
                 // init workers
-                var worker = new BackgroundWorker() { WorkerSupportsCancellation = true };
-                worker.DoWork += Worker_DoWork;
-                worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
-                workers[sn] = worker;
+                state.worker = new BackgroundWorker() { WorkerSupportsCancellation = true };
+                state.worker.DoWork += Worker_DoWork;
+                state.worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
+
+                states[sn] = state;
             }
+
+            var bindingList = new BindingList<SpectrometerStatus>();
+            foreach (var pair in states)
+                bindingList.Add(pair.Value.status);
+            statusSource = new BindingSource(bindingList, null);
+            dgvStatus.DataSource = statusSource;
+
             groupBoxTestControl.Enabled = true;
         }
 
@@ -98,18 +108,18 @@ namespace CrashTestNET
         {
             if (running)
             {
-                foreach (var pair in workers)
-                    pair.Value.CancelAsync();
+                foreach (var pair in states)
+                    pair.Value.worker.CancelAsync();
             }
             else
             {
                 buttonStart.Text = "Stop";
                 stopTime = DateTime.Now.AddMinutes(testDurationMin);
                 updateTimeRemaining();
-                foreach (var pair in workers)
+                foreach (var pair in states)
                 {
-                    logger.debug($"starting working for {pair.Key}");
-                    pair.Value.RunWorkerAsync(pair.Key);
+                    logger.debug($"starting worker for {pair.Key}");
+                    pair.Value.worker.RunWorkerAsync(pair.Key);
                 }
             }
         }
@@ -143,9 +153,8 @@ namespace CrashTestNET
 
         void processSpectrum(string sn, double[] spectrum)
         {
-            var spec = specs[sn];
-            var s = serieses[sn];
-            s.Points.DataBindXY(spec.wavelengths, spectrum);
+            var state = states[sn];
+            state.series.Points.DataBindXY(state.spec.wavelengths, spectrum);
 
             updateTimeRemaining();
         }
@@ -155,6 +164,8 @@ namespace CrashTestNET
             lock (labelTimeRemaining)
                 labelTimeRemaining.Text = 
                     string.Format("{0:hh\\:mm\\:ss}", stopTime - DateTime.Now);
+
+            statusSource.ResetBindings(false);
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -163,15 +174,17 @@ namespace CrashTestNET
 
         void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
-            var worker = sender as BackgroundWorker;
             var sn = e.Argument as string;
-            var spec = specs[sn];
+            var state = states[sn];
+            var worker = sender as BackgroundWorker;
+            var status = state.status;
+            var spec = state.spec;
 
-            runnings[sn] = true;
+            status.reset();
+            status.running = true;
+
             Thread.CurrentThread.Name = sn;
             logger.info("worker started");
-
-            int consecutiveFailures = 0;
 
             // enter event loop
             while (true)
@@ -184,21 +197,27 @@ namespace CrashTestNET
                     break;
 
                 // randomize integration time
-                var ms = (uint)r.Next(integTimeMin, integTimeMax);
-                logger.debug($"integTime -> {ms}");
-                spec.integrationTimeMS = ms;
+                spec.integrationTimeMS = (uint)r.Next(integTimeMin, integTimeMax);
 
                 // take acquisition
                 var spectrum = spec.getSpectrum();
                 if (spectrum is null)
                 {
-                    consecutiveFailures++;
-                    if (consecutiveFailures > MAX_CONSECUTIVE_FAILURES)
+                    status.readFailures++;
+                    status.consecutiveFailures++;
+                    if (status.consecutiveFailures > MAX_CONSECUTIVE_FAILURES)
                     {
-                        logger.error($"{sn}: giving up after {consecutiveFailures} consecutive failures");
+                        logger.error($"{sn}: giving up after {status.consecutiveFailures} consecutive failures");
                         break;
                     }
+
+                    // try again
+                    Thread.Sleep(1000);
+                    continue;
                 }
+
+                status.acquisitions++;
+                status.consecutiveFailures = 0;
 
                 // process measurement
                 chartAll.BeginInvoke((MethodInvoker)delegate { processSpectrum(sn, spectrum); });
@@ -217,13 +236,21 @@ namespace CrashTestNET
         void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             var sn = e.Result as string;
-            runnings[sn] = false;
+            var state = states[sn];
+            var status = state.status;
+
+            status.running = false;
             logger.debug($"{sn} worker complete");
 
             var allComplete = true;
-            foreach (var pair in specs)
-                if (runnings[pair.Key])
+            foreach (var pair in states)
+            {
+                if (pair.Value.status.running)
+                {
+                    logger.debug($"waiting on {pair.Key} to close");
                     allComplete = false;
+                }
+            }
 
             if (allComplete)
             {
