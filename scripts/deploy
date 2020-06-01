@@ -31,7 +31,7 @@ function postAndRename()
     LOCAL_PATH="${ARCH}/Debug/$LOCAL_NAME"
 
     REMOTE_NAME="CrashTestNET-${VERSION}-${ARCH}.msi"
-    REMOTE_PATH="www/binaries/prod/$REMOTE_NAME"
+    REMOTE_PATH="www/binaries/apps/CrashTestNET/$REMOTE_NAME"
 
     scp $LOCAL_PATH $USERNAME@wasatchphotonics.com:$REMOTE_PATH
 }

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Reflection;
-using System.Data;
 using WasatchNET;
 
 namespace CrashTestNET
@@ -35,6 +34,9 @@ namespace CrashTestNET
 
         SortedDictionary<string, SpectrometerState> states = new SortedDictionary<string, SpectrometerState>();
         BindingSource statusSource;
+
+        int[] forceExtraReadSequence = null; // { 7, 30, 2, 1, 30 };
+        int forceExtraReadIndex = 0;
 
         WasatchNET.Logger logger = WasatchNET.Logger.getInstance();
 
@@ -297,6 +299,7 @@ namespace CrashTestNET
                 // take acquisition
                 ////////////////////////////////////////////////////////////////
 
+                logger.debug("taking measurement");
                 if (explicitSWTrigger)
                 {
                     spec.sendSWTrigger();
@@ -346,7 +349,11 @@ namespace CrashTestNET
             const int EXTRA_READ_TYPES = 41;
             for (int i = 0; i < extraReads; i++)
             {
-                int type = r.Next(EXTRA_READ_TYPES);
+                int type = -1;
+                if (forceExtraReadSequence == null)
+                    type = r.Next(EXTRA_READ_TYPES);
+                else
+                    type = forceExtraReadSequence[forceExtraReadIndex++ % forceExtraReadSequence.Length];
                 logger.debug("performing extraRead {0} ({1} of {2})", type, i + 1, extraReads);
                 switch (type)
                 {
