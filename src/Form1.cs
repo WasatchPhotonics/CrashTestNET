@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Reflection;
 using System.Data;
+using WasatchNET;
 
 namespace CrashTestNET
 {
@@ -21,18 +22,23 @@ namespace CrashTestNET
         int readDelayMax = 0;
         int iterDelayMin = 0;
         int iterDelayMax = 0;
+        int extraReads = 0;
+        bool explicitSWTrigger = false;
 
         Random r = new Random();
         DateTime stopTime = DateTime.Now;
 
         bool running = false;
+        bool shutdownInProgress = false;
+        bool autoStart = false;
+        bool initialized = false;
 
         SortedDictionary<string, SpectrometerState> states = new SortedDictionary<string, SpectrometerState>();
         BindingSource statusSource;
 
         WasatchNET.Logger logger = WasatchNET.Logger.getInstance();
 
-        public Form1()
+        public Form1(string[] args)
         {
             InitializeComponent();
 
@@ -45,15 +51,46 @@ namespace CrashTestNET
             integTimeMax = (int)numericUpDownIntegTimeMax.Value;
             readDelayMin = (int)numericUpDownReadDelayMin.Value;
             readDelayMax = (int)numericUpDownReadDelayMax.Value;
+            extraReads = (int)numericUpDownExtraReads.Value;
 
             Text = string.Format("CrashTestNET {0}", 
                 Assembly.GetExecutingAssembly().GetName().Version.ToString());
+
+            // minimal command-line support
+            foreach (var arg in args)
+            {
+                if (arg == "--start")
+                    autoStart = true;
+                else if (arg == "--debug" || arg == "--verbose")
+                    logger.level = LogLevel.DEBUG;
+                else if (arg == "--help")
+                    Console.WriteLine("Usage: CrashTestNET.exe [--debug] [--start]");
+            }
+
+            if (autoStart)
+               Task.Delay(1000).ContinueWith(t => buttonInit_Click(null, null));
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e) => logger.setTextBox(null);
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (running)
+            {
+                shutdownInProgress = true;
+                foreach (var pair in states)
+                    pair.Value.worker.CancelAsync();
+                e.Cancel = true;
+                return;
+            }
+
+            Driver.getInstance().closeAllSpectrometers();
+            logger.setTextBox(null);
+        }
 
         void buttonInit_Click(object sender, EventArgs e)
         {
+            if (initialized)
+                return;
+
             chartAll.Series.Clear();
 
             var driver = WasatchNET.Driver.getInstance();
@@ -76,6 +113,8 @@ namespace CrashTestNET
                     i, spec.model, spec.serialNumber, spec.eeprom.detectorName, spec.pixels,
                     spec.wavelengths[0], spec.wavelengths[spec.pixels - 1]);
 
+                spec.readTemperatureAfterSpectrum = true;
+
                 SpectrometerState state = new SpectrometerState(spec);
 
                 // init graphs
@@ -97,7 +136,15 @@ namespace CrashTestNET
             statusSource = new BindingSource(bindingList, null);
             dgvStatus.DataSource = statusSource;
 
+            // update settings
+            updateReadDelays();
+            checkBoxIntegThrowaways_CheckedChanged(null, null);
+
             groupBoxTestControl.Enabled = true;
+
+            initialized = true;
+            if (autoStart)
+                buttonStart_Click(null, null);
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -118,11 +165,26 @@ namespace CrashTestNET
                 updateTimeRemaining();
                 foreach (var pair in states)
                 {
-                    logger.debug($"starting worker for {pair.Key}");
-                    pair.Value.worker.RunWorkerAsync(pair.Key);
+                    var sn = pair.Key;
+                    var state = pair.Value;
+                    var worker = state.worker;
+                    if (!worker.IsBusy)
+                    {
+                        logger.debug($"starting worker for {sn}");
+                        worker.RunWorkerAsync(sn);
+                    }
+                    else
+                    {
+                        logger.error($"worker already running for {sn}");
+                    }
                 }
             }
         }
+
+        void checkBoxVerbose_CheckedChanged(object sender, EventArgs e) =>
+            logger.level = (sender as CheckBox).Checked 
+                         ? WasatchNET.LogLevel.DEBUG 
+                         : WasatchNET.LogLevel.INFO;
 
         void numericUpDownTestMinutes_ValueChanged(object sender, EventArgs e)
         {
@@ -136,16 +198,33 @@ namespace CrashTestNET
         void numericUpDownIntegTimeMax_ValueChanged(object sender, EventArgs e) =>
             integTimeMax = (int)(sender as NumericUpDown).Value;
 
-        void numericUpDownReadDelayMin_ValueChanged(object sender, EventArgs e) =>
+        private void numericUpDownIterDelayMin_ValueChanged(object sender, EventArgs e) =>
+            iterDelayMin = (int)(sender as NumericUpDown).Value;
+
+        private void numericUpDownIterDelayMax_ValueChanged(object sender, EventArgs e) =>
+            iterDelayMax = (int)(sender as NumericUpDown).Value;
+
+        void numericUpDownReadDelayMin_ValueChanged(object sender, EventArgs e)
+        {
             readDelayMin = (int)(sender as NumericUpDown).Value;
+            updateReadDelays();
+        }
 
-        void numericUpDownReadDelayMax_ValueChanged(object sender, EventArgs e) =>
+        void numericUpDownReadDelayMax_ValueChanged(object sender, EventArgs e)
+        {
             readDelayMax = (int)(sender as NumericUpDown).Value;
+            updateReadDelays();
+        }
 
-        void checkBoxVerbose_CheckedChanged(object sender, EventArgs e) =>
-            logger.level = (sender as CheckBox).Checked 
-                         ? WasatchNET.LogLevel.DEBUG 
-                         : WasatchNET.LogLevel.INFO;
+        private void checkBoxIntegThrowaways_CheckedChanged(object sender, EventArgs e)
+        {
+            var enabled = checkBoxIntegThrowaways.Checked;
+            foreach (var pair in states)
+                pair.Value.spec.throwawayAfterIntegrationTime = enabled;
+        }
+
+        private void numericUpDownExtraReads_ValueChanged(object sender, EventArgs e) =>
+            extraReads = (int)(sender as NumericUpDown).Value;
 
         ////////////////////////////////////////////////////////////////////////
         // Methods
@@ -166,6 +245,17 @@ namespace CrashTestNET
                     string.Format("{0:hh\\:mm\\:ss}", stopTime - DateTime.Now);
 
             statusSource.ResetBindings(false);
+        }
+
+        void updateReadDelays()
+        {
+            // if there is any read delay at all, we must explicitly send the SW
+            // trigger, wait, then perform the read
+            explicitSWTrigger = readDelayMin != 0 || readDelayMax != 0;
+
+            // if using explicit SW triggers, disable the driver's autoTrigger
+            foreach (var pair in states)
+                pair.Value.spec.autoTrigger = !explicitSWTrigger;
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -196,11 +286,26 @@ namespace CrashTestNET
                 if (now >= stopTime)
                     break;
 
-                // randomize integration time
-                spec.integrationTimeMS = (uint)r.Next(integTimeMin, integTimeMax);
+                logger.header($"{sn} iteration {state.status.acquisitions}");
 
+                // randomize integration time
+                var integMS = (uint)r.Next(integTimeMin, integTimeMax);
+                logger.debug($"randomizing integration time to {integMS}");
+                spec.integrationTimeMS = integMS;
+
+                ////////////////////////////////////////////////////////////////
                 // take acquisition
+                ////////////////////////////////////////////////////////////////
+
+                if (explicitSWTrigger)
+                {
+                    spec.sendSWTrigger();
+                    var delayMS = r.Next(readDelayMin, readDelayMax);
+                    logger.debug($"waiting {delayMS} between trigger and read");
+                    Thread.Sleep(delayMS);
+                }
                 var spectrum = spec.getSpectrum();
+
                 if (spectrum is null)
                 {
                     status.readFailures++;
@@ -225,12 +330,70 @@ namespace CrashTestNET
                 if (worker.CancellationPending)
                     break;
 
-                var delayMS = r.Next(iterDelayMin, iterDelayMax);
-                Thread.Sleep(delayMS);
+                performExtraReads(spec);
+
+                var iterMS = r.Next(iterDelayMin, iterDelayMax);
+                logger.debug($"sleeping {iterMS} before next iteration");
+                Thread.Sleep(iterMS);
             }
 
             logger.info("worker closing");
             e.Result = sn;
+        }
+
+        void performExtraReads(Spectrometer spec)
+        {
+            const int EXTRA_READ_TYPES = 41;
+            for (int i = 0; i < extraReads; i++)
+            {
+                int type = r.Next(EXTRA_READ_TYPES);
+                logger.debug("performing extraRead {0} ({1} of {2})", type, i + 1, extraReads);
+                switch (type)
+                {
+                    case 0: logger.debug("extraRead: actualFrames = {0}", spec.actualFrames); break;
+                    case 1: logger.debug("extraRead: actualIntegrationTimeUS = {0}", spec.actualIntegrationTimeUS); break;
+                    case 2: logger.debug("extraRead: primaryADC = 0x{0:x4}", spec.primaryADC); break;
+                    case 3: logger.debug("extraRead: secondaryADC = 0x{0:x4}", spec.secondaryADC); break;
+                    case 4: logger.debug("extraRead: batteryCharging = {0}", spec.batteryCharging); break;
+                    case 5: logger.debug("extraRead: batteryPercentage = {0}", spec.batteryPercentage); break;
+                    case 6: logger.debug("extraRead: continuousAcquisitionEnable = {0}", spec.continuousAcquisitionEnable); break;
+                    case 7: logger.debug("extraRead: continuousFrames = {0}", spec.continuousFrames); break;
+                    case 8: logger.debug("extraRead: detectorGain = {0:f2}", spec.detectorGain); break;
+                    case 9: logger.debug("extraRead: detectorOffset = {0}", spec.detectorOffset); break;
+                    case 10: logger.debug("extraRead: detectorSensingThreshold = {0}", spec.detectorSensingThreshold); break;
+                    case 11: logger.debug("extraRead: detectorSensingThresholdEnabled = {0}", spec.detectorSensingThresholdEnabled); break;
+                    case 12: logger.debug("extraRead: detectorTECEnabled = {0}", spec.detectorTECEnabled); break;
+                    case 13: logger.debug("extraRead: detectorTECSetpointRaw = 0x{0:x4}", spec.detectorTECSetpointRaw); break;
+                    case 14: logger.debug("extraRead: firmwareRevision = {0}", spec.firmwareRevision); break;
+                    case 15: logger.debug("extraRead: fpgaRevision = {0}", spec.fpgaRevision); break;
+                    case 16: logger.debug("extraRead: highGainModeEnabled = {0}", spec.highGainModeEnabled); break;
+                    case 17: logger.debug("extraRead: horizontalBinning = {0}", spec.horizontalBinning); break;
+                    case 18: logger.debug("extraRead: integrationTimeMS = {0}", spec.integrationTimeMS); break;
+                    case 19: logger.debug("extraRead: laserEnabled = {0}", spec.laserEnabled); break;
+                    case 20: logger.debug("extraRead: laserModulationEnabled = {0}", spec.laserModulationEnabled); break;
+                    case 21: logger.debug("extraRead: laserInterlockEnabled = {0}", spec.laserInterlockEnabled); break;
+                    case 22: logger.debug("extraRead: laserModulationLinkedToIntegrationTime = {0}", spec.laserModulationLinkedToIntegrationTime); break;
+                    case 23: logger.debug("extraRead: laserModulationPulseDelay = {0}", spec.laserModulationPulseDelay); break;
+                    case 24: logger.debug("extraRead: laserModulationPulseWidth = {0}", spec.laserModulationPulseWidth); break;
+                    case 25: logger.debug("extraRead: laserModulationDuration = {0}", spec.laserModulationDuration); break;
+                    case 26: logger.debug("extraRead: laserModulationPeriod = {0}", spec.laserModulationPeriod); break;
+                    case 27: logger.debug("extraRead: laserTemperatureDegC = {0}", spec.laserTemperatureDegC); break;
+                    case 28: logger.debug("extraRead: laserTemperatureSetpointRaw = {0}", spec.laserTemperatureSetpointRaw); break;
+                    case 29: logger.debug("extraRead: lineLength = {0}", spec.lineLength); break;
+                    case 30: logger.debug("extraRead: optAreaScan = {0}", spec.optAreaScan); break;
+                    case 31: logger.debug("extraRead: optActualIntegrationTime = {0}", spec.optActualIntegrationTime); break;
+                    case 32: logger.debug("extraRead: optCFSelect = {0}", spec.optCFSelect); break;
+                    case 33: logger.debug("extraRead: optDataHeaderTag = {0}", spec.optDataHeaderTag); break;
+                    case 34: logger.debug("extraRead: optHorizontalBinning = {0}", spec.optHorizontalBinning); break;
+                    case 35: logger.debug("extraRead: optIntegrationTimeResolution = {0}", spec.optIntegrationTimeResolution); break;
+                    case 36: logger.debug("extraRead: optLaserControl = {0}", spec.optLaserControl); break;
+                    case 37: logger.debug("extraRead: optLaserType = {0}", spec.optLaserType); break;
+                    case 38: logger.debug("extraRead: triggerSource = {0}", spec.triggerSource); break;
+                    case 39: logger.debug("extraRead: triggerOutput = {0}", spec.triggerOutput); break;
+                    case 40: logger.debug("extraRead: triggerDelay = {0}", spec.triggerDelay); break;
+                    default: break;
+                }
+            }
         }
 
         void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -256,12 +419,9 @@ namespace CrashTestNET
             {
                 running = false;
                 buttonStart.Text = "Start";
+                if (shutdownInProgress || autoStart)
+                    Close();
             }
-        }
-
-        private void numericUpDownIterDelayMin_ValueChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }

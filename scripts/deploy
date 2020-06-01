@@ -1,0 +1,65 @@
+#!/bin/bash
+################################################################################
+#                                  deploy                                      #
+################################################################################
+#                                                                              #
+#  DESCRIPTION:  Quick script to consistently and reliably upload releases     #
+#                to our website.                                               #
+#                                                                              #
+#  AUTHOR:       Mark Zieg <mzieg@wasatchphotonics.com>                        #
+#                                                                              #
+################################################################################
+
+function verifyExists()
+{
+    local ARCH="$1"
+    LOCAL_NAME="CrashTestNET-${ARCH}.msi"
+    LOCAL_PATH="${ARCH}/Debug/$LOCAL_NAME"
+
+    if ! [ -f $LOCAL_PATH ]
+    then
+        echo "ERROR: can't find $LOCAL_PATH"
+        exit 1
+    fi
+}
+
+function postAndRename()
+{
+    local ARCH="$1"
+    
+    LOCAL_NAME="CrashTestNET-${ARCH}.msi"
+    LOCAL_PATH="${ARCH}/Debug/$LOCAL_NAME"
+
+    REMOTE_NAME="CrashTestNET-${VERSION}-${ARCH}.msi"
+    REMOTE_PATH="www/binaries/prod/$REMOTE_NAME"
+
+    scp $LOCAL_PATH $USERNAME@wasatchphotonics.com:$REMOTE_PATH
+}
+
+read -p "Username: " USERNAME
+read -p "Version:  " VERSION 
+
+# make sure we're releasing off master
+BRANCH=`git rev-parse --abbrev-ref HEAD`
+if [ $BRANCH != "master" ]
+then
+    echo "Please release off master (currently on $BRANCH)"
+    exit 1
+fi
+
+# verify version number is tagged
+if git tag | egrep -q $VERSION
+then
+    echo "Git tag found"
+else
+    echo "Git tag not found: $VERSION"
+    exit 1
+fi
+
+# verify installers
+verifyExists "Setup32"
+#verifyExists "Setup64"
+
+# upload installers
+postAndRename "Setup32"
+#postAndRename "Setup64"

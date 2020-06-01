@@ -23,10 +23,7 @@ Tasks).  We may add a Task option down the road.
 
 ## Backlog
 
-- Add "Summary" tab with table of iterations, failures, shifts etc by spectrometer.
-- optional integration time throwaways
 - batch file wrapper for disconnects
-- misc readouts including temperature, version etc
 - track wavelength of boxcar-10 maxima vs shift threshold
 - static driver readout lock
 - static driver comms lock
