@@ -23,6 +23,7 @@ namespace CrashTestNET
         int iterDelayMax = 0;
         int extraReads = 0;
         bool explicitSWTrigger = false;
+        bool serializeSpecs = false;
 
         Random r = new Random();
         DateTime stopTime = DateTime.Now;
@@ -35,10 +36,13 @@ namespace CrashTestNET
         SortedDictionary<string, SpectrometerState> states = new SortedDictionary<string, SpectrometerState>();
         BindingSource statusSource;
 
-        int[] forceExtraReadSequence = null; // { 7, 30, 2, 1, 30 };
+        // in case we're trying to reproduce a previous random failure
+        int[] forceExtraReadSequence = null; // e.g. { 7, 30, 2, 1, 30 };
         int forceExtraReadIndex = 0;
 
-        WasatchNET.Logger logger = WasatchNET.Logger.getInstance();
+        Mutex mut = new Mutex();
+
+        Logger logger = Logger.getInstance();
 
         public Form1(string[] args)
         {
@@ -46,14 +50,17 @@ namespace CrashTestNET
 
             logger.setTextBox(textBoxEventLog);
 
-            testDurationMin = (int)numericUpDownTestMinutes.Value;
-            iterDelayMin = (int)numericUpDownIterDelayMin.Value;
-            iterDelayMax = (int)numericUpDownIterDelayMax.Value;
-            integTimeMin = (int)numericUpDownIntegTimeMin.Value;
-            integTimeMax = (int)numericUpDownIntegTimeMax.Value;
-            readDelayMin = (int)numericUpDownReadDelayMin.Value;
-            readDelayMax = (int)numericUpDownReadDelayMax.Value;
-            extraReads = (int)numericUpDownExtraReads.Value;
+            checkBoxIntegThrowaways_CheckedChanged(null, null);
+            checkBoxSerializeSpecs_CheckedChanged(null, null);
+            checkBoxVerbose_CheckedChanged(null, null);
+            numericUpDownExtraReads_ValueChanged(null, null);
+            numericUpDownIntegTimeMax_ValueChanged(null, null);
+            numericUpDownIntegTimeMin_ValueChanged(null, null);
+            numericUpDownIterDelayMax_ValueChanged(null, null);
+            numericUpDownIterDelayMin_ValueChanged(null, null);
+            numericUpDownReadDelayMax_ValueChanged(null, null);
+            numericUpDownReadDelayMin_ValueChanged(null, null);
+            numericUpDownTestMinutes_ValueChanged(null, null);
 
             Text = string.Format("CrashTestNET {0}", 
                 Assembly.GetExecutingAssembly().GetName().Version.ToString());
@@ -111,6 +118,13 @@ namespace CrashTestNET
             {
                 var spec = driver.getSpectrometer(i);
                 var sn = spec.serialNumber;
+                if (sn is null)
+                {
+                    logger.error($"Index {i}: failed to parse EEPROM");
+                    spec.close();
+                    continue;
+                }
+
                 logger.info("Index {0}: model {1}, serial {2}, detector {3}, pixels {4}, range ({5:f2}, {6:f2}nm)",
                     i, spec.model, spec.serialNumber, spec.eeprom.detectorName, spec.pixels,
                     spec.wavelengths[0], spec.wavelengths[spec.pixels - 1]);
@@ -145,6 +159,7 @@ namespace CrashTestNET
             groupBoxTestControl.Enabled = true;
 
             initialized = true;
+            buttonInit.Enabled = false;
             if (autoStart)
                 buttonStart_Click(null, null);
         }
@@ -162,6 +177,7 @@ namespace CrashTestNET
             }
             else
             {
+                running = true;
                 buttonStart.Text = "Stop";
                 stopTime = DateTime.Now.AddMinutes(testDurationMin);
                 updateTimeRemaining();
@@ -184,49 +200,52 @@ namespace CrashTestNET
         }
 
         void checkBoxVerbose_CheckedChanged(object sender, EventArgs e) =>
-            logger.level = (sender as CheckBox).Checked 
+            logger.level = checkBoxVerbose.Checked 
                          ? WasatchNET.LogLevel.DEBUG 
                          : WasatchNET.LogLevel.INFO;
 
         void numericUpDownTestMinutes_ValueChanged(object sender, EventArgs e)
         {
-            testDurationMin = (int)(sender as NumericUpDown).Value;
+            testDurationMin = (int)numericUpDownTestMinutes.Value;
             stopTime = DateTime.Now.AddMinutes(testDurationMin);
         }
 
         void numericUpDownIntegTimeMin_ValueChanged(object sender, EventArgs e) =>
-            integTimeMin = (int)(sender as NumericUpDown).Value;
+            integTimeMin = (int)numericUpDownIntegTimeMin.Value;
 
         void numericUpDownIntegTimeMax_ValueChanged(object sender, EventArgs e) =>
-            integTimeMax = (int)(sender as NumericUpDown).Value;
+            integTimeMax = (int)numericUpDownIntegTimeMax.Value;
 
-        private void numericUpDownIterDelayMin_ValueChanged(object sender, EventArgs e) =>
-            iterDelayMin = (int)(sender as NumericUpDown).Value;
+        void numericUpDownIterDelayMin_ValueChanged(object sender, EventArgs e) =>
+            iterDelayMin = (int)numericUpDownIterDelayMin.Value;
 
-        private void numericUpDownIterDelayMax_ValueChanged(object sender, EventArgs e) =>
-            iterDelayMax = (int)(sender as NumericUpDown).Value;
+        void numericUpDownIterDelayMax_ValueChanged(object sender, EventArgs e) =>
+            iterDelayMax = (int)numericUpDownIterDelayMax.Value;
 
         void numericUpDownReadDelayMin_ValueChanged(object sender, EventArgs e)
         {
-            readDelayMin = (int)(sender as NumericUpDown).Value;
+            readDelayMin = (int)numericUpDownReadDelayMin.Value;
             updateReadDelays();
         }
 
         void numericUpDownReadDelayMax_ValueChanged(object sender, EventArgs e)
         {
-            readDelayMax = (int)(sender as NumericUpDown).Value;
+            readDelayMax = (int)numericUpDownReadDelayMax.Value;
             updateReadDelays();
         }
 
-        private void checkBoxIntegThrowaways_CheckedChanged(object sender, EventArgs e)
+        void checkBoxIntegThrowaways_CheckedChanged(object sender, EventArgs e)
         {
             var enabled = checkBoxIntegThrowaways.Checked;
             foreach (var pair in states)
                 pair.Value.spec.throwawayAfterIntegrationTime = enabled;
         }
 
-        private void numericUpDownExtraReads_ValueChanged(object sender, EventArgs e) =>
-            extraReads = (int)(sender as NumericUpDown).Value;
+        void numericUpDownExtraReads_ValueChanged(object sender, EventArgs e) =>
+            extraReads = (int)numericUpDownExtraReads.Value;
+
+        void checkBoxSerializeSpecs_CheckedChanged(object sender, EventArgs e) =>
+            serializeSpecs = checkBoxSerializeSpecs.Checked;
 
         ////////////////////////////////////////////////////////////////////////
         // Methods
@@ -284,6 +303,9 @@ namespace CrashTestNET
                 if (worker.CancellationPending)
                     break;
 
+                if (serializeSpecs)
+                    mut.WaitOne();
+
                 DateTime now = DateTime.Now;
                 if (now >= stopTime)
                     break;
@@ -334,6 +356,9 @@ namespace CrashTestNET
                     break;
 
                 performExtraReads(spec);
+
+                if (serializeSpecs)
+                    mut.ReleaseMutex();
 
                 var iterMS = r.Next(iterDelayMin, iterDelayMax);
                 logger.debug($"sleeping {iterMS} before next iteration");
@@ -422,12 +447,25 @@ namespace CrashTestNET
                 }
             }
 
+            updateTimeRemaining();
+
             if (allComplete)
             {
                 running = false;
                 buttonStart.Text = "Start";
                 if (shutdownInProgress || autoStart)
                     Close();
+            }
+        }
+
+        private void checkBoxSerializeReads_CheckedChanged(object sender, EventArgs e)
+        {
+            var enabled = checkBoxSerializeReads.Checked;
+            foreach (var pair in states)
+            {
+                var state = pair.Value;
+                var spec = state.spec;
+                spec.useReadoutMutex = enabled;
             }
         }
     }
