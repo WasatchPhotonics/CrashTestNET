@@ -36,6 +36,7 @@ namespace CrashTestNET
 
         SortedDictionary<string, SpectrometerState> states = new SortedDictionary<string, SpectrometerState>();
         BindingSource statusSource;
+        BindingList<SpectrometerStatus> bindingList;
 
         // in case we're trying to reproduce a previous random failure
         int[] forceExtraReadSequence = null; // e.g. { 7, 30, 2, 1, 30 };
@@ -108,6 +109,7 @@ namespace CrashTestNET
 
         void cleanShutdown()
         {
+            bindingList.Clear();
             dgvStatus.AutoGenerateColumns = false;
             dgvStatus.DataSource = null;
             Driver.getInstance().closeAllSpectrometers();
@@ -134,6 +136,7 @@ namespace CrashTestNET
                 return;
             }
 
+            states = new SortedDictionary<string, SpectrometerState>();
             for (int i = 0; i < specCount; i++)
             {
                 var spec = driver.getSpectrometer(i);
@@ -166,7 +169,7 @@ namespace CrashTestNET
                 states[sn] = state;
             }
 
-            var bindingList = new BindingList<SpectrometerStatus>();
+            bindingList = new BindingList<SpectrometerStatus>();
             foreach (var pair in states)
                 bindingList.Add(pair.Value.status);
             statusSource = new BindingSource(bindingList, null);
