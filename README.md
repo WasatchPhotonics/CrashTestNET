@@ -27,4 +27,3 @@ Tasks).  We may add a Task option down the road.
 - track wavelength of boxcar-10 maxima vs shift threshold
 - static driver readout lock
 - static driver comms lock
-

@@ -1,0 +1,7 @@
+- 2020-06-03 1.0.1
+    - added serialize reads
+    - added serialize spectrometers
+    - added repeatable extra reads
+    - simplified GUI
+- 2020-06-01 1.0.0
+    - initial release

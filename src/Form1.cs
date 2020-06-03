@@ -157,6 +157,7 @@ namespace CrashTestNET
             checkBoxIntegThrowaways_CheckedChanged(null, null);
 
             groupBoxTestControl.Enabled = true;
+            groupBoxMonteCarlo.Enabled = true;
 
             initialized = true;
             buttonInit.Enabled = false;
@@ -236,9 +237,8 @@ namespace CrashTestNET
 
         void checkBoxIntegThrowaways_CheckedChanged(object sender, EventArgs e)
         {
-            var enabled = checkBoxIntegThrowaways.Checked;
             foreach (var pair in states)
-                pair.Value.spec.throwawayAfterIntegrationTime = enabled;
+                pair.Value.spec.throwawayAfterIntegrationTime = checkBoxIntegThrowaways.Checked;
         }
 
         void numericUpDownExtraReads_ValueChanged(object sender, EventArgs e) =>
@@ -460,13 +460,8 @@ namespace CrashTestNET
 
         private void checkBoxSerializeReads_CheckedChanged(object sender, EventArgs e)
         {
-            var enabled = checkBoxSerializeReads.Checked;
             foreach (var pair in states)
-            {
-                var state = pair.Value;
-                var spec = state.spec;
-                spec.useReadoutMutex = enabled;
-            }
+                pair.Value.spec.useReadoutMutex = checkBoxSerializeReads.Checked;
         }
     }
 }

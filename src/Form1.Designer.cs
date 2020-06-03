@@ -28,12 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea7 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend7 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series7 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea8 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend8 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series8 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.splitContainerTopVsBottom = new System.Windows.Forms.SplitContainer();
             this.splitContainerControlsVsGraph = new System.Windows.Forms.SplitContainer();
             this.flowLayoutPanelControls = new System.Windows.Forms.FlowLayoutPanel();
@@ -63,16 +63,16 @@
             this.numericUpDownExtraReads = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
             this.checkBoxSerializeSpecs = new System.Windows.Forms.CheckBox();
+            this.checkBoxSerializeReads = new System.Windows.Forms.CheckBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageSpectra = new System.Windows.Forms.TabPage();
             this.chartAll = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.tabPageTime = new System.Windows.Forms.TabPage();
             this.chartTime = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.tabPageStatus = new System.Windows.Forms.TabPage();
             this.dgvStatus = new System.Windows.Forms.DataGridView();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.textBoxEventLog = new System.Windows.Forms.TextBox();
-            this.checkBoxSerializeReads = new System.Windows.Forms.CheckBox();
+            this.splitContainerGraphVsStatus = new System.Windows.Forms.SplitContainer();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerTopVsBottom)).BeginInit();
             this.splitContainerTopVsBottom.Panel1.SuspendLayout();
             this.splitContainerTopVsBottom.Panel2.SuspendLayout();
@@ -100,9 +100,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.chartAll)).BeginInit();
             this.tabPageTime.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chartTime)).BeginInit();
-            this.tabPageStatus.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvStatus)).BeginInit();
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerGraphVsStatus)).BeginInit();
+            this.splitContainerGraphVsStatus.Panel1.SuspendLayout();
+            this.splitContainerGraphVsStatus.Panel2.SuspendLayout();
+            this.splitContainerGraphVsStatus.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainerTopVsBottom
@@ -272,6 +275,7 @@
             // groupBoxMonteCarlo
             // 
             this.groupBoxMonteCarlo.Controls.Add(this.tableLayoutPanel1);
+            this.groupBoxMonteCarlo.Enabled = false;
             this.groupBoxMonteCarlo.Location = new System.Drawing.Point(3, 147);
             this.groupBoxMonteCarlo.Name = "groupBoxMonteCarlo";
             this.groupBoxMonteCarlo.Size = new System.Drawing.Size(200, 300);
@@ -515,11 +519,22 @@
             this.checkBoxSerializeSpecs.UseVisualStyleBackColor = true;
             this.checkBoxSerializeSpecs.CheckedChanged += new System.EventHandler(this.checkBoxSerializeSpecs_CheckedChanged);
             // 
+            // checkBoxSerializeReads
+            // 
+            this.checkBoxSerializeReads.AutoSize = true;
+            this.tableLayoutPanel1.SetColumnSpan(this.checkBoxSerializeReads, 2);
+            this.checkBoxSerializeReads.Location = new System.Drawing.Point(3, 212);
+            this.checkBoxSerializeReads.Name = "checkBoxSerializeReads";
+            this.checkBoxSerializeReads.Size = new System.Drawing.Size(99, 17);
+            this.checkBoxSerializeReads.TabIndex = 15;
+            this.checkBoxSerializeReads.Text = "Serialize Reads";
+            this.checkBoxSerializeReads.UseVisualStyleBackColor = true;
+            this.checkBoxSerializeReads.CheckedChanged += new System.EventHandler(this.checkBoxSerializeReads_CheckedChanged);
+            // 
             // tabControl1
             // 
             this.tabControl1.Controls.Add(this.tabPageSpectra);
             this.tabControl1.Controls.Add(this.tabPageTime);
-            this.tabControl1.Controls.Add(this.tabPageStatus);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
@@ -529,7 +544,7 @@
             // 
             // tabPageSpectra
             // 
-            this.tabPageSpectra.Controls.Add(this.chartAll);
+            this.tabPageSpectra.Controls.Add(this.splitContainerGraphVsStatus);
             this.tabPageSpectra.Location = new System.Drawing.Point(4, 22);
             this.tabPageSpectra.Name = "tabPageSpectra";
             this.tabPageSpectra.Padding = new System.Windows.Forms.Padding(3);
@@ -540,27 +555,27 @@
             // 
             // chartAll
             // 
-            chartArea1.AxisX.IsStartedFromZero = false;
-            chartArea1.AxisX.LabelStyle.Format = "f2";
-            chartArea1.AxisX.Title = "Wavelength";
-            chartArea1.AxisY.Title = "Intensity (Counts)";
-            chartArea1.CursorX.IsUserEnabled = true;
-            chartArea1.CursorX.IsUserSelectionEnabled = true;
-            chartArea1.CursorY.IsUserEnabled = true;
-            chartArea1.CursorY.IsUserSelectionEnabled = true;
-            chartArea1.Name = "ChartArea1";
-            this.chartAll.ChartAreas.Add(chartArea1);
+            chartArea7.AxisX.IsStartedFromZero = false;
+            chartArea7.AxisX.LabelStyle.Format = "f2";
+            chartArea7.AxisX.Title = "Wavelength";
+            chartArea7.AxisY.Title = "Intensity (Counts)";
+            chartArea7.CursorX.IsUserEnabled = true;
+            chartArea7.CursorX.IsUserSelectionEnabled = true;
+            chartArea7.CursorY.IsUserEnabled = true;
+            chartArea7.CursorY.IsUserSelectionEnabled = true;
+            chartArea7.Name = "ChartArea1";
+            this.chartAll.ChartAreas.Add(chartArea7);
             this.chartAll.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend1.Name = "Legend1";
-            this.chartAll.Legends.Add(legend1);
-            this.chartAll.Location = new System.Drawing.Point(3, 3);
+            legend7.Name = "Legend1";
+            this.chartAll.Legends.Add(legend7);
+            this.chartAll.Location = new System.Drawing.Point(0, 0);
             this.chartAll.Name = "chartAll";
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series1.Legend = "Legend1";
-            series1.Name = "Series1";
-            this.chartAll.Series.Add(series1);
-            this.chartAll.Size = new System.Drawing.Size(573, 312);
+            series7.ChartArea = "ChartArea1";
+            series7.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series7.Legend = "Legend1";
+            series7.Name = "Series1";
+            this.chartAll.Series.Add(series7);
+            this.chartAll.Size = new System.Drawing.Size(573, 235);
             this.chartAll.TabIndex = 0;
             this.chartAll.Text = "chart1";
             // 
@@ -577,42 +592,35 @@
             // 
             // chartTime
             // 
-            chartArea2.Name = "ChartArea1";
-            this.chartTime.ChartAreas.Add(chartArea2);
+            chartArea8.Name = "ChartArea1";
+            this.chartTime.ChartAreas.Add(chartArea8);
             this.chartTime.Dock = System.Windows.Forms.DockStyle.Fill;
-            legend2.Name = "Legend1";
-            this.chartTime.Legends.Add(legend2);
+            legend8.Name = "Legend1";
+            this.chartTime.Legends.Add(legend8);
             this.chartTime.Location = new System.Drawing.Point(3, 3);
             this.chartTime.Name = "chartTime";
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
-            series2.Legend = "Legend1";
-            series2.Name = "Series1";
-            this.chartTime.Series.Add(series2);
+            series8.ChartArea = "ChartArea1";
+            series8.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
+            series8.Legend = "Legend1";
+            series8.Name = "Series1";
+            this.chartTime.Series.Add(series8);
             this.chartTime.Size = new System.Drawing.Size(573, 312);
             this.chartTime.TabIndex = 0;
             this.chartTime.Text = "chart1";
-            // 
-            // tabPageStatus
-            // 
-            this.tabPageStatus.Controls.Add(this.dgvStatus);
-            this.tabPageStatus.Location = new System.Drawing.Point(4, 22);
-            this.tabPageStatus.Name = "tabPageStatus";
-            this.tabPageStatus.Size = new System.Drawing.Size(579, 318);
-            this.tabPageStatus.TabIndex = 2;
-            this.tabPageStatus.Text = "Status";
-            this.tabPageStatus.UseVisualStyleBackColor = true;
             // 
             // dgvStatus
             // 
             this.dgvStatus.AllowUserToAddRows = false;
             this.dgvStatus.AllowUserToDeleteRows = false;
+            this.dgvStatus.AllowUserToOrderColumns = true;
+            this.dgvStatus.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+            this.dgvStatus.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
             this.dgvStatus.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvStatus.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvStatus.Location = new System.Drawing.Point(0, 0);
             this.dgvStatus.Name = "dgvStatus";
             this.dgvStatus.ReadOnly = true;
-            this.dgvStatus.Size = new System.Drawing.Size(579, 318);
+            this.dgvStatus.Size = new System.Drawing.Size(573, 73);
             this.dgvStatus.TabIndex = 0;
             // 
             // groupBox1
@@ -636,17 +644,23 @@
             this.textBoxEventLog.Size = new System.Drawing.Size(794, 83);
             this.textBoxEventLog.TabIndex = 0;
             // 
-            // checkBoxSerializeReads
+            // splitContainerGraphVsStatus
             // 
-            this.checkBoxSerializeReads.AutoSize = true;
-            this.tableLayoutPanel1.SetColumnSpan(this.checkBoxSerializeReads, 2);
-            this.checkBoxSerializeReads.Location = new System.Drawing.Point(3, 212);
-            this.checkBoxSerializeReads.Name = "checkBoxSerializeReads";
-            this.checkBoxSerializeReads.Size = new System.Drawing.Size(99, 17);
-            this.checkBoxSerializeReads.TabIndex = 15;
-            this.checkBoxSerializeReads.Text = "Serialize Reads";
-            this.checkBoxSerializeReads.UseVisualStyleBackColor = true;
-            this.checkBoxSerializeReads.CheckedChanged += new System.EventHandler(this.checkBoxSerializeReads_CheckedChanged);
+            this.splitContainerGraphVsStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainerGraphVsStatus.Location = new System.Drawing.Point(3, 3);
+            this.splitContainerGraphVsStatus.Name = "splitContainerGraphVsStatus";
+            this.splitContainerGraphVsStatus.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainerGraphVsStatus.Panel1
+            // 
+            this.splitContainerGraphVsStatus.Panel1.Controls.Add(this.chartAll);
+            // 
+            // splitContainerGraphVsStatus.Panel2
+            // 
+            this.splitContainerGraphVsStatus.Panel2.Controls.Add(this.dgvStatus);
+            this.splitContainerGraphVsStatus.Size = new System.Drawing.Size(573, 312);
+            this.splitContainerGraphVsStatus.SplitterDistance = 235;
+            this.splitContainerGraphVsStatus.TabIndex = 1;
             // 
             // Form1
             // 
@@ -687,10 +701,13 @@
             ((System.ComponentModel.ISupportInitialize)(this.chartAll)).EndInit();
             this.tabPageTime.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.chartTime)).EndInit();
-            this.tabPageStatus.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvStatus)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.splitContainerGraphVsStatus.Panel1.ResumeLayout(false);
+            this.splitContainerGraphVsStatus.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerGraphVsStatus)).EndInit();
+            this.splitContainerGraphVsStatus.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -729,13 +746,13 @@
         private System.Windows.Forms.NumericUpDown numericUpDownIterDelayMin;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.NumericUpDown numericUpDownIterDelayMax;
-        private System.Windows.Forms.TabPage tabPageStatus;
         private System.Windows.Forms.DataGridView dgvStatus;
         private System.Windows.Forms.CheckBox checkBoxIntegThrowaways;
         private System.Windows.Forms.NumericUpDown numericUpDownExtraReads;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.CheckBox checkBoxSerializeSpecs;
         private System.Windows.Forms.CheckBox checkBoxSerializeReads;
+        private System.Windows.Forms.SplitContainer splitContainerGraphVsStatus;
     }
 }
 
