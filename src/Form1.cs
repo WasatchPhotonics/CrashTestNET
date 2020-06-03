@@ -28,10 +28,11 @@ namespace CrashTestNET
         Random r = new Random();
         DateTime stopTime = DateTime.Now;
 
+        bool initialized = false;
         bool running = false;
         bool shutdownInProgress = false;
+
         bool autoStart = false;
-        bool initialized = false;
 
         SortedDictionary<string, SpectrometerState> states = new SortedDictionary<string, SpectrometerState>();
         BindingSource statusSource;
@@ -73,11 +74,22 @@ namespace CrashTestNET
                 else if (arg == "--debug" || arg == "--verbose")
                     logger.level = LogLevel.DEBUG;
                 else if (arg == "--help")
-                    Console.WriteLine("Usage: CrashTestNET.exe [--debug] [--start]");
+                    usage();
             }
 
             if (autoStart)
                Task.Delay(1000).ContinueWith(t => buttonInit_Click(null, null));
+        }
+
+        void usage()
+        {
+            Console.WriteLine(
+                "Usage: CrashTestNET.exe [--debug] [--start] [--exit]\n"
+              + "\n" 
+              + "--debug     output verbose logging\n"
+              + "--start     initialize and start test on launch\n"
+            );
+            Application.Exit();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -91,8 +103,15 @@ namespace CrashTestNET
                 return;
             }
 
+            cleanShutdown();
+        }
+
+        void cleanShutdown()
+        {
+            statusSource.Clear();
             Driver.getInstance().closeAllSpectrometers();
             logger.setTextBox(null);
+            Application.Exit();
         }
 
         void buttonInit_Click(object sender, EventArgs e)
@@ -321,6 +340,8 @@ namespace CrashTestNET
                 // take acquisition
                 ////////////////////////////////////////////////////////////////
 
+                logger.info($"{sn} iteration {state.status.acquisitions} integration {integMS} ms");
+
                 logger.debug("taking measurement");
                 if (explicitSWTrigger)
                 {
@@ -454,7 +475,7 @@ namespace CrashTestNET
                 running = false;
                 buttonStart.Text = "Start";
                 if (shutdownInProgress || autoStart)
-                    Close();
+                    cleanShutdown();
             }
         }
 
@@ -462,6 +483,12 @@ namespace CrashTestNET
         {
             foreach (var pair in states)
                 pair.Value.spec.useReadoutMutex = checkBoxSerializeReads.Checked;
+        }
+
+        private void checkBoxHasMarker_CheckedChanged(object sender, EventArgs e)
+        {
+            foreach (var pair in states)
+                pair.Value.spec.hasMarker = checkBoxHasMarker.Checked;
         }
     }
 }

@@ -1,3 +1,10 @@
+- 2020-06-03 1.0.2
+    - added run-ragged.bat
+    - added run-loop.bat
+    - added cleanShutdown
+    - added usage()
+    - run in Console to allow easier logfile capture
+    - support hasMarker
 - 2020-06-03 1.0.1
     - added serialize reads
     - added serialize spectrometers

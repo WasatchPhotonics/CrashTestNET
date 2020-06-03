@@ -34,13 +34,13 @@
         "Entry"
         {
         "MsmKey" = "8:_5FE6778A55462BCACE3AAF9798EFC998"
-        "OwnerKey" = "8:_04EC073803DE7C2D5E7A5CFE61AF7D96"
+        "OwnerKey" = "8:_1474C0D3F5D043F183E87AD8F55FA3A8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_5FE6778A55462BCACE3AAF9798EFC998"
-        "OwnerKey" = "8:_1474C0D3F5D043F183E87AD8F55FA3A8"
+        "OwnerKey" = "8:_04EC073803DE7C2D5E7A5CFE61AF7D96"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -57,20 +57,32 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1474C0D3F5D043F183E87AD8F55FA3A8"
+        "MsmKey" = "8:_CA193E6D16ED43DBAEF4DE726957E50A"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D338653C70734A73B73B29402E56B7EE"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_04EC073803DE7C2D5E7A5CFE61AF7D96"
+        "OwnerKey" = "8:_1474C0D3F5D043F183E87AD8F55FA3A8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_5FE6778A55462BCACE3AAF9798EFC998"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_04EC073803DE7C2D5E7A5CFE61AF7D96"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -184,7 +196,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:WasatchNET, Version=2.2.8.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:WasatchNET, Version=2.2.10.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_04EC073803DE7C2D5E7A5CFE61AF7D96"
@@ -304,6 +316,46 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CA193E6D16ED43DBAEF4DE726957E50A"
+            {
+            "SourcePath" = "8:..\\scripts\\run-ragged.bat"
+            "TargetName" = "8:run-ragged.bat"
+            "Tag" = "8:"
+            "Folder" = "8:_1CB6872207834CCA80C9135D973057E9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D338653C70734A73B73B29402E56B7EE"
+            {
+            "SourcePath" = "8:..\\scripts\\run-loop.bat"
+            "TargetName" = "8:run-loop.bat"
+            "Tag" = "8:"
+            "Folder" = "8:_1CB6872207834CCA80C9135D973057E9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
         }
         "FileType"
         {
@@ -371,15 +423,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:CrashTestNET"
-        "ProductCode" = "8:{81045B34-B983-425D-8E69-27F6CDFF4990}"
-        "PackageCode" = "8:{66BCCFDA-8C35-4A53-9BBC-8F2620632D5F}"
+        "ProductCode" = "8:{2560BE41-31FA-41D5-9AD2-E6EAAC700514}"
+        "PackageCode" = "8:{A8C8B9F8-F5E4-4A47-868E-6D4475C0492B}"
         "UpgradeCode" = "8:{9A114EA7-30AB-4B21-ACEF-E37C75FB55B7}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.0"
+        "ProductVersion" = "8:1.0.2"
         "Manufacturer" = "8:Wasatch Photonics"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

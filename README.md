@@ -23,7 +23,10 @@ Tasks).  We may add a Task option down the road.
 
 ## Backlog
 
-- batch file wrapper for disconnects
 - track wavelength of boxcar-10 maxima vs shift threshold
-- static driver readout lock
-- static driver comms lock
+- additional cmd-line args for run-loop.bat and run-ragged.bat 
+  (--min-integration-time, --max-integration-time, --extra-reads etc)
+
+## Changelog
+
+- see [Changelog](README_CHANGELOG.md)
