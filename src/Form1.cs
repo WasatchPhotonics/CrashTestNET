@@ -108,7 +108,8 @@ namespace CrashTestNET
 
         void cleanShutdown()
         {
-            statusSource.Clear();
+            dgvStatus.AutoGenerateColumns = false;
+            dgvStatus.DataSource = null;
             Driver.getInstance().closeAllSpectrometers();
             logger.setTextBox(null);
             Application.Exit();
