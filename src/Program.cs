@@ -12,11 +12,14 @@ namespace CrashTestNET
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main(string[] args)
+        static void Main(string[] argv)
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1(args));
+
+            var args = new Args();
+            if (args.parse(argv))
+                Application.Run(new Form1(args));
         }
     }
 }

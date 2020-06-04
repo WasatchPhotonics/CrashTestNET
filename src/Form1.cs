@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using System.Reflection;
@@ -12,27 +11,21 @@ namespace CrashTestNET
 {
     public partial class Form1 : Form
     {
+        // these have not yet been moved to Args
         const int MAX_CONSECUTIVE_FAILURES = 3;
-
-        int testDurationMin = 1;
-        int integTimeMin = 0;
-        int integTimeMax = 0;
-        int readDelayMin = 0;
-        int readDelayMax = 0;
-        int iterDelayMin = 0;
-        int iterDelayMax = 0;
-        int extraReads = 0;
-        bool explicitSWTrigger = false;
         bool serializeSpecs = false;
+        bool explicitSWTrigger = false;
 
+        Args args;
         Random r = new Random();
         DateTime stopTime = DateTime.Now;
 
-        bool initialized = false;
-        bool running = false;
-        bool shutdownInProgress = false;
+        System.Windows.Forms.Timer startupTimer = new System.Windows.Forms.Timer();
 
-        bool autoStart = false;
+        bool initializing;
+        bool initialized;
+        bool running;
+        bool shutdownInProgress;
 
         SortedDictionary<string, SpectrometerState> states = new SortedDictionary<string, SpectrometerState>();
         BindingSource statusSource;
@@ -42,83 +35,124 @@ namespace CrashTestNET
         int[] forceExtraReadSequence = null; // e.g. { 7, 30, 2, 1, 30 };
         int forceExtraReadIndex = 0;
 
-        Mutex mut = new Mutex();
+        Mutex specMut = new Mutex();
+        Mutex bindingMut = new Mutex();
 
         Logger logger = Logger.getInstance();
 
-        public Form1(string[] args)
+        ////////////////////////////////////////////////////////////////////////
+        // Lifecycle
+        ////////////////////////////////////////////////////////////////////////
+
+        public Form1(Args args)
         {
             InitializeComponent();
 
-            logger.setTextBox(textBoxEventLog);
+            this.args = args;
 
-            checkBoxIntegThrowaways_CheckedChanged(null, null);
-            checkBoxSerializeSpecs_CheckedChanged(null, null);
-            checkBoxVerbose_CheckedChanged(null, null);
-            numericUpDownExtraReads_ValueChanged(null, null);
-            numericUpDownIntegTimeMax_ValueChanged(null, null);
-            numericUpDownIntegTimeMin_ValueChanged(null, null);
-            numericUpDownIterDelayMax_ValueChanged(null, null);
-            numericUpDownIterDelayMin_ValueChanged(null, null);
-            numericUpDownReadDelayMax_ValueChanged(null, null);
-            numericUpDownReadDelayMin_ValueChanged(null, null);
-            numericUpDownTestMinutes_ValueChanged(null, null);
+            logger.setTextBox(textBoxEventLog);
 
             Text = string.Format("CrashTestNET {0}", 
                 Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
-            // minimal command-line support
-            foreach (var arg in args)
-            {
-                if (arg == "--start")
-                    autoStart = true;
-                else if (arg == "--debug" || arg == "--verbose")
-                    logger.level = LogLevel.DEBUG;
-                else if (arg == "--help")
-                    usage();
-            }
+            // help to suppress occasional shutdown errors?
+            // dgvStatus.DataError += dataGridView_DataError;
 
-            if (autoStart)
-               Task.Delay(1000).ContinueWith(t => buttonInit_Click(null, null));
+            // apply command-line arguments
+            checkBoxVerbose.Checked = args.verbose;
+            checkBoxIntegThrowaways.Checked = args.throwaways;
+            numericUpDownExtraReads.Value = args.extraReads;
+            numericUpDownTestSeconds.Value = args.durationSec;
+            numericUpDownIntegTimeMin.Value = args.integMin;
+            numericUpDownIntegTimeMax.Value = args.integMax;
+
+            // haven't exposed these through cmd-line args yet
+            checkBoxSerializeSpecs_CheckedChanged(null, null);
+
+            // if autostarting, click the Initialize button 1sec after launch
+            if (args.autoStart)
+            {
+                startupTimer.Interval = 1000;
+                startupTimer.Tick += tickStartupTimer;
+                startupTimer.Start(); 
+            }
         }
 
-        void usage()
+        // Using a Windows Timer seems cumbersome, but ensures the button
+        // clicks are on the GUI thread, and occur entirely outside the Form
+        // constructor.  Seems to avoid some rare timing glitches under load?
+        private void tickStartupTimer(Object myObject, EventArgs myEventArgs)
         {
-            Console.WriteLine(
-                "Usage: CrashTestNET.exe [--debug] [--start] [--exit]\n"
-              + "\n" 
-              + "--debug     output verbose logging\n"
-              + "--start     initialize and start test on launch\n"
-            );
-            Application.Exit();
+            if (!initializing)
+            {
+                buttonInit_Click(null, null);
+            }
+            else if (initialized)
+            {
+                startupTimer.Stop();
+                buttonStart_Click(null, null);
+            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            shutdownInProgress = true;
+
             if (running)
             {
-                shutdownInProgress = true;
+                logger.info("closing all workers");
                 foreach (var pair in states)
                     pair.Value.worker.CancelAsync();
+
+                // cancel this Close() event...the final Worker_RunWorkerCompleted
+                // call will issue a fresh one
                 e.Cancel = true;
                 return;
             }
 
-            cleanShutdown();
+            while (true)
+            {
+                bool allStopped = true;
+                foreach (var pair in states)
+                    if (pair.Value.worker.IsBusy)
+                        allStopped = false;
+
+                if (allStopped)
+                    break;
+
+                logger.info("waiting for workers to close");
+                Thread.Sleep(500);
+            }
+
+            // force synchronization with any in-progress calls to processSpectrum 
+            bindingMut.WaitOne();
+            {
+                Thread.Sleep(1000); 
+
+                dgvStatus.AutoGenerateColumns = false;
+                dgvStatus.DataSource = null;
+                dgvStatus.Rows.Clear();
+                dgvStatus.Refresh();
+
+                chartAll.Series.Clear();
+                if (bindingList != null)
+                    bindingList.Clear();
+            }
+            bindingMut.ReleaseMutex();
+
+            states.Clear();
+
+            Driver.getInstance().closeAllSpectrometers();
         }
 
-        void cleanShutdown()
-        {
-            bindingList.Clear();
-            dgvStatus.AutoGenerateColumns = false;
-            dgvStatus.DataSource = null;
-            Driver.getInstance().closeAllSpectrometers();
-            logger.setTextBox(null);
-            Application.Exit();
-        }
+        ////////////////////////////////////////////////////////////////////////
+        // Callbacks
+        ////////////////////////////////////////////////////////////////////////
 
         void buttonInit_Click(object sender, EventArgs e)
         {
+            initializing = true;
+
             if (initialized)
                 return;
 
@@ -171,7 +205,12 @@ namespace CrashTestNET
 
             bindingList = new BindingList<SpectrometerStatus>();
             foreach (var pair in states)
-                bindingList.Add(pair.Value.status);
+            {
+                var state = pair.Value;
+                var spec = state.spec;
+                bindingList.Add(state.status);
+                state.series.Points.DataBindXY(spec.wavelengths, new double[spec.pixels]);
+            }
             statusSource = new BindingSource(bindingList, null);
             dgvStatus.DataSource = statusSource;
 
@@ -184,13 +223,7 @@ namespace CrashTestNET
 
             initialized = true;
             buttonInit.Enabled = false;
-            if (autoStart)
-                buttonStart_Click(null, null);
         }
-
-        ////////////////////////////////////////////////////////////////////////
-        // Callbacks
-        ////////////////////////////////////////////////////////////////////////
 
         void buttonStart_Click(object sender, EventArgs e)
         {
@@ -203,8 +236,8 @@ namespace CrashTestNET
             {
                 running = true;
                 buttonStart.Text = "Stop";
-                stopTime = DateTime.Now.AddMinutes(testDurationMin);
-                updateTimeRemaining();
+                stopTime = DateTime.Now.AddSeconds(args.durationSec);
+                updateStatus();
                 foreach (var pair in states)
                 {
                     var sn = pair.Key;
@@ -228,33 +261,33 @@ namespace CrashTestNET
                          ? WasatchNET.LogLevel.DEBUG 
                          : WasatchNET.LogLevel.INFO;
 
-        void numericUpDownTestMinutes_ValueChanged(object sender, EventArgs e)
+        void numericUpDownTestSeconds_ValueChanged(object sender, EventArgs e)
         {
-            testDurationMin = (int)numericUpDownTestMinutes.Value;
-            stopTime = DateTime.Now.AddMinutes(testDurationMin);
+            args.durationSec = (int)numericUpDownTestSeconds.Value;
+            stopTime = DateTime.Now.AddSeconds(args.durationSec);
         }
 
         void numericUpDownIntegTimeMin_ValueChanged(object sender, EventArgs e) =>
-            integTimeMin = (int)numericUpDownIntegTimeMin.Value;
+            args.integMin = (int)numericUpDownIntegTimeMin.Value;
 
         void numericUpDownIntegTimeMax_ValueChanged(object sender, EventArgs e) =>
-            integTimeMax = (int)numericUpDownIntegTimeMax.Value;
+            args.integMax = (int)numericUpDownIntegTimeMax.Value;
 
         void numericUpDownIterDelayMin_ValueChanged(object sender, EventArgs e) =>
-            iterDelayMin = (int)numericUpDownIterDelayMin.Value;
+            args.iterDelayMin = (int)numericUpDownIterDelayMin.Value;
 
         void numericUpDownIterDelayMax_ValueChanged(object sender, EventArgs e) =>
-            iterDelayMax = (int)numericUpDownIterDelayMax.Value;
+            args.iterDelayMax = (int)numericUpDownIterDelayMax.Value;
 
         void numericUpDownReadDelayMin_ValueChanged(object sender, EventArgs e)
         {
-            readDelayMin = (int)numericUpDownReadDelayMin.Value;
+            args.readDelayMin = (int)numericUpDownReadDelayMin.Value;
             updateReadDelays();
         }
 
         void numericUpDownReadDelayMax_ValueChanged(object sender, EventArgs e)
         {
-            readDelayMax = (int)numericUpDownReadDelayMax.Value;
+            args.readDelayMax = (int)numericUpDownReadDelayMax.Value;
             updateReadDelays();
         }
 
@@ -265,10 +298,25 @@ namespace CrashTestNET
         }
 
         void numericUpDownExtraReads_ValueChanged(object sender, EventArgs e) =>
-            extraReads = (int)numericUpDownExtraReads.Value;
+            args.extraReads = (int)numericUpDownExtraReads.Value;
 
         void checkBoxSerializeSpecs_CheckedChanged(object sender, EventArgs e) =>
             serializeSpecs = checkBoxSerializeSpecs.Checked;
+
+        private void checkBoxSerializeReads_CheckedChanged(object sender, EventArgs e)
+        {
+            foreach (var pair in states)
+                pair.Value.spec.useReadoutMutex = checkBoxSerializeReads.Checked;
+        }
+
+        private void checkBoxHasMarker_CheckedChanged(object sender, EventArgs e)
+        {
+            foreach (var pair in states)
+                pair.Value.spec.hasMarker = checkBoxHasMarker.Checked;
+        }
+
+        private void dataGridView_DataError(object sender, DataGridViewDataErrorEventArgs anError) =>
+            logger.error("ignoring DGV error");
 
         ////////////////////////////////////////////////////////////////////////
         // Methods
@@ -277,25 +325,43 @@ namespace CrashTestNET
         void processSpectrum(string sn, double[] spectrum)
         {
             var state = states[sn];
-            state.series.Points.DataBindXY(state.spec.wavelengths, spectrum);
+            var x = (double[])state.spec.wavelengths.Clone();
+            var y = (double[])spectrum.Clone();
 
-            updateTimeRemaining();
+            if (!bindingMut.WaitOne(5))
+                return;
+
+            if (shutdownInProgress)
+                return;
+
+            try
+            {
+                state.series.Points.DataBindXY(x, y);
+                updateStatus();
+            }
+            catch (Exception e)
+            {
+                logger.error("ignoring exception during processSpectrum: {0}", e);
+            }
+
+            bindingMut.ReleaseMutex();
         }
 
-        void updateTimeRemaining()
+        void updateStatus()
         {
-            lock (labelTimeRemaining)
-                labelTimeRemaining.Text = 
-                    string.Format("{0:hh\\:mm\\:ss}", stopTime - DateTime.Now);
-
-            statusSource.ResetBindings(false);
+            if (!shutdownInProgress)
+            {
+                labelTimeRemaining.Text = string.Format("{0:hh\\:mm\\:ss}", stopTime - DateTime.Now);
+                if (statusSource != null)
+                    statusSource.ResetBindings(true);
+            }
         }
 
         void updateReadDelays()
         {
             // if there is any read delay at all, we must explicitly send the SW
             // trigger, wait, then perform the read
-            explicitSWTrigger = readDelayMin != 0 || readDelayMax != 0;
+            explicitSWTrigger = args.readDelayMin != 0 || args.readDelayMax != 0;
 
             // if using explicit SW triggers, disable the driver's autoTrigger
             foreach (var pair in states)
@@ -320,14 +386,17 @@ namespace CrashTestNET
             Thread.CurrentThread.Name = sn;
             logger.info("worker started");
 
+            // give all workers a chance to instantiate before diving in
+            Thread.Sleep(r.Next(100, 500));
+
             // enter event loop
             while (true)
             {
-                if (worker.CancellationPending)
+                if (worker.CancellationPending || shutdownInProgress)
                     break;
 
                 if (serializeSpecs)
-                    mut.WaitOne();
+                    specMut.WaitOne();
 
                 DateTime now = DateTime.Now;
                 if (now >= stopTime)
@@ -336,7 +405,7 @@ namespace CrashTestNET
                 logger.header($"{sn} iteration {state.status.acquisitions}");
 
                 // randomize integration time
-                var integMS = (uint)r.Next(integTimeMin, integTimeMax);
+                var integMS = (uint)r.Next(args.integMin, args.integMax);
                 logger.debug($"randomizing integration time to {integMS}");
                 spec.integrationTimeMS = integMS;
 
@@ -350,7 +419,7 @@ namespace CrashTestNET
                 if (explicitSWTrigger)
                 {
                     spec.sendSWTrigger();
-                    var delayMS = r.Next(readDelayMin, readDelayMax);
+                    var delayMS = r.Next(args.readDelayMin, args.readDelayMax);
                     logger.debug($"waiting {delayMS} between trigger and read");
                     Thread.Sleep(delayMS);
                 }
@@ -375,7 +444,7 @@ namespace CrashTestNET
                 status.consecutiveFailures = 0;
 
                 // process measurement
-                chartAll.BeginInvoke((MethodInvoker)delegate { processSpectrum(sn, spectrum); });
+                buttonStart.BeginInvoke((MethodInvoker)delegate { processSpectrum(sn, spectrum); });
 
                 if (worker.CancellationPending)
                     break;
@@ -383,11 +452,11 @@ namespace CrashTestNET
                 performExtraReads(spec);
 
                 if (serializeSpecs)
-                    mut.ReleaseMutex();
+                    specMut.ReleaseMutex();
 
-                var iterMS = r.Next(iterDelayMin, iterDelayMax);
-                logger.debug($"sleeping {iterMS} before next iteration");
-                Thread.Sleep(iterMS);
+                var iterDelayMS = r.Next(args.iterDelayMin, args.iterDelayMax);
+                logger.debug($"sleeping {iterDelayMS} before next iteration");
+                Thread.Sleep(iterDelayMS);
             }
 
             logger.info("worker closing");
@@ -397,14 +466,14 @@ namespace CrashTestNET
         void performExtraReads(Spectrometer spec)
         {
             const int EXTRA_READ_TYPES = 41;
-            for (int i = 0; i < extraReads; i++)
+            for (int i = 0; i < args.extraReads; i++)
             {
                 int type = -1;
                 if (forceExtraReadSequence == null)
                     type = r.Next(EXTRA_READ_TYPES);
                 else
                     type = forceExtraReadSequence[forceExtraReadIndex++ % forceExtraReadSequence.Length];
-                logger.debug("performing extraRead {0} ({1} of {2})", type, i + 1, extraReads);
+                logger.debug("performing extraRead {0} ({1} of {2})", type, i + 1, args.extraReads);
                 switch (type)
                 {
                     case 0: logger.debug("extraRead: actualFrames = {0}", spec.actualFrames); break;
@@ -472,27 +541,18 @@ namespace CrashTestNET
                 }
             }
 
-            updateTimeRemaining();
-
             if (allComplete)
             {
                 running = false;
                 buttonStart.Text = "Start";
-                if (shutdownInProgress || autoStart)
-                    cleanShutdown();
+
+                if (shutdownInProgress || args.autoStart)
+                {
+                    shutdownInProgress = true;
+                    Thread.Sleep(1000);
+                    Close();
+                }
             }
-        }
-
-        private void checkBoxSerializeReads_CheckedChanged(object sender, EventArgs e)
-        {
-            foreach (var pair in states)
-                pair.Value.spec.useReadoutMutex = checkBoxSerializeReads.Checked;
-        }
-
-        private void checkBoxHasMarker_CheckedChanged(object sender, EventArgs e)
-        {
-            foreach (var pair in states)
-                pair.Value.spec.hasMarker = checkBoxHasMarker.Checked;
         }
     }
 }

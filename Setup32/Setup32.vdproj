@@ -318,7 +318,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CA193E6D16ED43DBAEF4DE726957E50A"
             {
-            "SourcePath" = "8:..\\scripts\\run-ragged.bat"
+            "SourcePath" = "8:..\\run-ragged.bat"
             "TargetName" = "8:run-ragged.bat"
             "Tag" = "8:"
             "Folder" = "8:_1CB6872207834CCA80C9135D973057E9"
@@ -338,7 +338,7 @@
             }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D338653C70734A73B73B29402E56B7EE"
             {
-            "SourcePath" = "8:..\\scripts\\run-loop.bat"
+            "SourcePath" = "8:..\\run-loop.bat"
             "TargetName" = "8:run-loop.bat"
             "Tag" = "8:"
             "Folder" = "8:_1CB6872207834CCA80C9135D973057E9"
@@ -423,15 +423,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:CrashTestNET"
-        "ProductCode" = "8:{2560BE41-31FA-41D5-9AD2-E6EAAC700514}"
-        "PackageCode" = "8:{A8C8B9F8-F5E4-4A47-868E-6D4475C0492B}"
+        "ProductCode" = "8:{6A7A4FA6-9591-496E-936D-125DA6E57BE7}"
+        "PackageCode" = "8:{76471E0B-6D4F-4AFC-8299-C9B6AB428942}"
         "UpgradeCode" = "8:{9A114EA7-30AB-4B21-ACEF-E37C75FB55B7}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.2"
+        "ProductVersion" = "8:1.0.3"
         "Manufacturer" = "8:Wasatch Photonics"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

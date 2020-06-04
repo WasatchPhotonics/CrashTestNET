@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WasatchNET;
+﻿using WasatchNET;
 
 namespace CrashTestNET
 {
+    // These are the fields of the DataGridView table shown below the Chart.
     class SpectrometerStatus
     {
-        Spectrometer spec;
-
         public string serial { get => spec.serialNumber; }
         public string model { get => spec.model; }
+        public string FW { get => spec.firmwareRevision; }
+        public string FPGA { get => spec.fpgaRevision; }
         public uint integrationTimeMS { get => spec.integrationTimeMS; }
         public float detectorTempDegC { get => spec.lastDetectorTemperatureDegC; }
 
@@ -21,6 +17,8 @@ namespace CrashTestNET
         public int readFailures { get; set; }
         public int shifts { get; set; }
         public int consecutiveFailures { get; set; }
+
+        Spectrometer spec;
 
         public SpectrometerStatus(Spectrometer spec)
         {

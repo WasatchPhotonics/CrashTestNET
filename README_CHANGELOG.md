@@ -1,3 +1,8 @@
+- 2020-06-04 1.0.3
+    - moved batch files to top dir
+    - added Args
+    - changed startup from Task to Timer
+    - empirically ruggedized teardown
 - 2020-06-03 1.0.2
     - added run-ragged.bat
     - added run-loop.bat

@@ -21,11 +21,21 @@ At the moment I'm going with BackgroundWorkers, not because I don't understand
 async methods, but because I want everything segmented into proper Threads (vs
 Tasks).  We may add a Task option down the road.
 
+## Command-Line
+
+Unusually for a WinForms GUI, this app runs with a visible Console window (DOS 
+shell).  This allows Console output to be viewed in the shell, and captured to a
+file, when run from batch scripts.
+
+Two batch scripts are provided for automated command-line execution, if start/stop
+(enumeration) behavior is being tested.
+
+- run-loop.bat (lets each iteration exit normally)
+- run-ragged.bat (abruptly and randomly kills each iteration)
+
 ## Backlog
 
 - track wavelength of boxcar-10 maxima vs shift threshold
-- additional cmd-line args for run-loop.bat and run-ragged.bat 
-  (--min-integration-time, --max-integration-time, --extra-reads etc)
 
 ## Changelog
 
