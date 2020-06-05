@@ -18,7 +18,7 @@ del CrashTestNET.log 2>NUL
 for /l %%i in (1, 1, %ITERATIONS%) do (
     echo Iteration %%i
     echo Iteration %%i >> %LOGFILE%
-    CrashTestNET --start --duration-sec 10 >> %LOGFILE%
+    CrashTestNET --start --duration-sec 60 --integ-min 10 --integ-max 25 --metrics >> %LOGFILE%
 )
 
 cd %OLD_DIR%
