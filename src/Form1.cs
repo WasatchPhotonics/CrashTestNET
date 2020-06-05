@@ -63,7 +63,6 @@ namespace CrashTestNET
             numericUpDownTestSeconds.Value = args.durationSec;
             numericUpDownIntegTimeMin.Value = args.integMin;
             numericUpDownIntegTimeMax.Value = args.integMax;
-            checkBoxTrackMetrics.Checked = args.trackMetrics;
 
             // haven't exposed these through cmd-line args yet
             checkBoxSerializeSpecs_CheckedChanged(null, null);
@@ -219,6 +218,8 @@ namespace CrashTestNET
             // update settings
             updateReadDelays();
             checkBoxIntegThrowaways_CheckedChanged(null, null);
+
+            checkBoxTrackMetrics.Checked = args.trackMetrics;
 
             groupBoxTestControl.Enabled = true;
             groupBoxMonteCarlo.Enabled = true;
