@@ -92,6 +92,9 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="WasatchMath">
+      <HintPath>C:\Program Files (x86)\Wasatch Photonics\Wasatch.NET\WasatchMath.dll</HintPath>
+    </Reference>
     <Reference Include="WasatchNET, Version=2.1.13.0, Culture=neutral, PublicKeyToken=412e9f6bb23c0fc1, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Wasatch Photonics\Wasatch.NET\WasatchNET.dll</HintPath>
@@ -109,6 +112,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SpectrometerState.cs" />
     <Compile Include="SpectrometerStatus.cs" />
+    <Compile Include="Metrics.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

@@ -1,3 +1,6 @@
+- 2020-06-05 1.0.4
+    - added Metrics (currently hard-coded to confirm left-side integral > right-side integral)
+    - added displayTimer to decouple graphing/processing speed from data collection
 - 2020-06-04 1.0.3
     - moved batch files to top dir
     - added Args

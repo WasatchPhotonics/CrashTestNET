@@ -64,6 +64,7 @@
             this.checkBoxSerializeReads = new System.Windows.Forms.CheckBox();
             this.checkBoxHasMarker = new System.Windows.Forms.CheckBox();
             this.numericUpDownExtraReads = new System.Windows.Forms.NumericUpDown();
+            this.checkBoxTrackMetrics = new System.Windows.Forms.CheckBox();
             this.label7 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageSpectra = new System.Windows.Forms.TabPage();
@@ -254,7 +255,7 @@
             0});
             this.numericUpDownTestSeconds.Name = "numericUpDownTestSeconds";
             this.numericUpDownTestSeconds.Size = new System.Drawing.Size(50, 20);
-            this.numericUpDownTestSeconds.TabIndex = 2;
+            this.numericUpDownTestSeconds.TabIndex = 1;
             this.numericUpDownTestSeconds.Value = new decimal(new int[] {
             60,
             0,
@@ -304,18 +305,20 @@
             this.tableLayoutPanel1.Controls.Add(this.checkBoxSerializeSpecs, 0, 9);
             this.tableLayoutPanel1.Controls.Add(this.checkBoxSerializeReads, 0, 10);
             this.tableLayoutPanel1.Controls.Add(this.checkBoxHasMarker, 0, 11);
-            this.tableLayoutPanel1.Controls.Add(this.numericUpDownExtraReads, 0, 12);
-            this.tableLayoutPanel1.Controls.Add(this.label7, 1, 12);
+            this.tableLayoutPanel1.Controls.Add(this.numericUpDownExtraReads, 0, 14);
+            this.tableLayoutPanel1.Controls.Add(this.checkBoxTrackMetrics, 0, 12);
+            this.tableLayoutPanel1.Controls.Add(this.label7, 1, 14);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 14;
+            this.tableLayoutPanel1.RowCount = 15;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -342,7 +345,7 @@
             0});
             this.numericUpDownIntegTimeMin.Name = "numericUpDownIntegTimeMin";
             this.numericUpDownIntegTimeMin.Size = new System.Drawing.Size(50, 20);
-            this.numericUpDownIntegTimeMin.TabIndex = 0;
+            this.numericUpDownIntegTimeMin.TabIndex = 2;
             this.numericUpDownIntegTimeMin.Value = new decimal(new int[] {
             10,
             0,
@@ -365,7 +368,7 @@
             0});
             this.numericUpDownIntegTimeMax.Name = "numericUpDownIntegTimeMax";
             this.numericUpDownIntegTimeMax.Size = new System.Drawing.Size(50, 20);
-            this.numericUpDownIntegTimeMax.TabIndex = 1;
+            this.numericUpDownIntegTimeMax.TabIndex = 3;
             this.numericUpDownIntegTimeMax.Value = new decimal(new int[] {
             1000,
             0,
@@ -393,7 +396,7 @@
             0});
             this.numericUpDownIterDelayMin.Name = "numericUpDownIterDelayMin";
             this.numericUpDownIterDelayMin.Size = new System.Drawing.Size(50, 20);
-            this.numericUpDownIterDelayMin.TabIndex = 1;
+            this.numericUpDownIterDelayMin.TabIndex = 6;
             this.numericUpDownIterDelayMin.ValueChanged += new System.EventHandler(this.numericUpDownIterDelayMin_ValueChanged);
             // 
             // label1
@@ -402,7 +405,7 @@
             this.label1.Location = new System.Drawing.Point(3, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(24, 13);
-            this.label1.TabIndex = 2;
+            this.label1.TabIndex = 0;
             this.label1.Text = "Min";
             // 
             // label2
@@ -411,7 +414,7 @@
             this.label2.Location = new System.Drawing.Point(94, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(27, 13);
-            this.label2.TabIndex = 3;
+            this.label2.TabIndex = 1;
             this.label2.Text = "Max";
             // 
             // numericUpDownReadDelayMin
@@ -424,7 +427,7 @@
             0});
             this.numericUpDownReadDelayMin.Name = "numericUpDownReadDelayMin";
             this.numericUpDownReadDelayMin.Size = new System.Drawing.Size(50, 20);
-            this.numericUpDownReadDelayMin.TabIndex = 5;
+            this.numericUpDownReadDelayMin.TabIndex = 4;
             this.numericUpDownReadDelayMin.ValueChanged += new System.EventHandler(this.numericUpDownReadDelayMin_ValueChanged);
             // 
             // numericUpDownReadDelayMax
@@ -437,7 +440,7 @@
             0});
             this.numericUpDownReadDelayMax.Name = "numericUpDownReadDelayMax";
             this.numericUpDownReadDelayMax.Size = new System.Drawing.Size(50, 20);
-            this.numericUpDownReadDelayMax.TabIndex = 6;
+            this.numericUpDownReadDelayMax.TabIndex = 5;
             this.numericUpDownReadDelayMax.ValueChanged += new System.EventHandler(this.numericUpDownReadDelayMax_ValueChanged);
             // 
             // label4
@@ -469,7 +472,7 @@
             0});
             this.numericUpDownIterDelayMax.Name = "numericUpDownIterDelayMax";
             this.numericUpDownIterDelayMax.Size = new System.Drawing.Size(50, 20);
-            this.numericUpDownIterDelayMax.TabIndex = 9;
+            this.numericUpDownIterDelayMax.TabIndex = 7;
             this.numericUpDownIterDelayMax.ValueChanged += new System.EventHandler(this.numericUpDownIterDelayMax_ValueChanged);
             // 
             // checkBoxIntegThrowaways
@@ -479,7 +482,7 @@
             this.checkBoxIntegThrowaways.Location = new System.Drawing.Point(3, 140);
             this.checkBoxIntegThrowaways.Name = "checkBoxIntegThrowaways";
             this.checkBoxIntegThrowaways.Size = new System.Drawing.Size(86, 17);
-            this.checkBoxIntegThrowaways.TabIndex = 11;
+            this.checkBoxIntegThrowaways.TabIndex = 8;
             this.checkBoxIntegThrowaways.Text = "Throwaways";
             this.checkBoxIntegThrowaways.UseVisualStyleBackColor = true;
             this.checkBoxIntegThrowaways.CheckedChanged += new System.EventHandler(this.checkBoxIntegThrowaways_CheckedChanged);
@@ -491,7 +494,7 @@
             this.checkBoxSerializeSpecs.Location = new System.Drawing.Point(3, 163);
             this.checkBoxSerializeSpecs.Name = "checkBoxSerializeSpecs";
             this.checkBoxSerializeSpecs.Size = new System.Drawing.Size(136, 17);
-            this.checkBoxSerializeSpecs.TabIndex = 14;
+            this.checkBoxSerializeSpecs.TabIndex = 9;
             this.checkBoxSerializeSpecs.Text = "Serialize Spectrometers";
             this.checkBoxSerializeSpecs.UseVisualStyleBackColor = true;
             this.checkBoxSerializeSpecs.CheckedChanged += new System.EventHandler(this.checkBoxSerializeSpecs_CheckedChanged);
@@ -503,7 +506,7 @@
             this.checkBoxSerializeReads.Location = new System.Drawing.Point(3, 186);
             this.checkBoxSerializeReads.Name = "checkBoxSerializeReads";
             this.checkBoxSerializeReads.Size = new System.Drawing.Size(99, 17);
-            this.checkBoxSerializeReads.TabIndex = 15;
+            this.checkBoxSerializeReads.TabIndex = 10;
             this.checkBoxSerializeReads.Text = "Serialize Reads";
             this.checkBoxSerializeReads.UseVisualStyleBackColor = true;
             this.checkBoxSerializeReads.CheckedChanged += new System.EventHandler(this.checkBoxSerializeReads_CheckedChanged);
@@ -511,17 +514,18 @@
             // checkBoxHasMarker
             // 
             this.checkBoxHasMarker.AutoSize = true;
+            this.tableLayoutPanel1.SetColumnSpan(this.checkBoxHasMarker, 2);
             this.checkBoxHasMarker.Location = new System.Drawing.Point(3, 209);
             this.checkBoxHasMarker.Name = "checkBoxHasMarker";
             this.checkBoxHasMarker.Size = new System.Drawing.Size(81, 17);
-            this.checkBoxHasMarker.TabIndex = 16;
+            this.checkBoxHasMarker.TabIndex = 11;
             this.checkBoxHasMarker.Text = "Has Marker";
             this.checkBoxHasMarker.UseVisualStyleBackColor = true;
             this.checkBoxHasMarker.CheckedChanged += new System.EventHandler(this.checkBoxHasMarker_CheckedChanged);
             // 
             // numericUpDownExtraReads
             // 
-            this.numericUpDownExtraReads.Location = new System.Drawing.Point(3, 232);
+            this.numericUpDownExtraReads.Location = new System.Drawing.Point(3, 255);
             this.numericUpDownExtraReads.Maximum = new decimal(new int[] {
             20,
             0,
@@ -532,11 +536,23 @@
             this.numericUpDownExtraReads.TabIndex = 12;
             this.numericUpDownExtraReads.ValueChanged += new System.EventHandler(this.numericUpDownExtraReads_ValueChanged);
             // 
+            // checkBoxTrackMetrics
+            // 
+            this.checkBoxTrackMetrics.AutoSize = true;
+            this.tableLayoutPanel1.SetColumnSpan(this.checkBoxTrackMetrics, 2);
+            this.checkBoxTrackMetrics.Location = new System.Drawing.Point(3, 232);
+            this.checkBoxTrackMetrics.Name = "checkBoxTrackMetrics";
+            this.checkBoxTrackMetrics.Size = new System.Drawing.Size(87, 17);
+            this.checkBoxTrackMetrics.TabIndex = 14;
+            this.checkBoxTrackMetrics.Text = "Track Metrics";
+            this.checkBoxTrackMetrics.UseVisualStyleBackColor = true;
+            this.checkBoxTrackMetrics.CheckedChanged += new System.EventHandler(this.checkBoxTrackMetrics_CheckedChanged);
+            // 
             // label7
             // 
             this.label7.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(94, 235);
+            this.label7.Location = new System.Drawing.Point(94, 260);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(65, 13);
             this.label7.TabIndex = 13;
@@ -765,6 +781,7 @@
         private System.Windows.Forms.CheckBox checkBoxSerializeReads;
         private System.Windows.Forms.SplitContainer splitContainerGraphVsStatus;
         private System.Windows.Forms.CheckBox checkBoxHasMarker;
+        private System.Windows.Forms.CheckBox checkBoxTrackMetrics;
     }
 }
 

@@ -34,13 +34,13 @@
         "Entry"
         {
         "MsmKey" = "8:_5FE6778A55462BCACE3AAF9798EFC998"
-        "OwnerKey" = "8:_1474C0D3F5D043F183E87AD8F55FA3A8"
+        "OwnerKey" = "8:_04EC073803DE7C2D5E7A5CFE61AF7D96"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_5FE6778A55462BCACE3AAF9798EFC998"
-        "OwnerKey" = "8:_04EC073803DE7C2D5E7A5CFE61AF7D96"
+        "OwnerKey" = "8:_1474C0D3F5D043F183E87AD8F55FA3A8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -53,6 +53,12 @@
         {
         "MsmKey" = "8:_6B2FA2B8D0DB253C673AD31E299C5626"
         "OwnerKey" = "8:_04EC073803DE7C2D5E7A5CFE61AF7D96"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_7871FF01D9C1612E1701B9B55637ED66"
+        "OwnerKey" = "8:_1474C0D3F5D043F183E87AD8F55FA3A8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -70,13 +76,19 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1474C0D3F5D043F183E87AD8F55FA3A8"
+        "OwnerKey" = "8:_1EE8A6693DD63B8EAAD1C04E8DF408BF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_5FE6778A55462BCACE3AAF9798EFC998"
+        "OwnerKey" = "8:_7871FF01D9C1612E1701B9B55637ED66"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_1474C0D3F5D043F183E87AD8F55FA3A8"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -88,13 +100,13 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_6B2FA2B8D0DB253C673AD31E299C5626"
+        "OwnerKey" = "8:_5FE6778A55462BCACE3AAF9798EFC998"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_1EE8A6693DD63B8EAAD1C04E8DF408BF"
+        "OwnerKey" = "8:_6B2FA2B8D0DB253C673AD31E299C5626"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -316,6 +328,37 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_7871FF01D9C1612E1701B9B55637ED66"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:WasatchMath, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_7871FF01D9C1612E1701B9B55637ED66"
+                    {
+                    "Name" = "8:WasatchMath.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:WasatchMath.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_1CB6872207834CCA80C9135D973057E9"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_CA193E6D16ED43DBAEF4DE726957E50A"
             {
             "SourcePath" = "8:..\\run-ragged.bat"
@@ -423,15 +466,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:CrashTestNET"
-        "ProductCode" = "8:{6A7A4FA6-9591-496E-936D-125DA6E57BE7}"
-        "PackageCode" = "8:{76471E0B-6D4F-4AFC-8299-C9B6AB428942}"
+        "ProductCode" = "8:{B6D9C193-938E-4E6E-852B-03F2EEC8E0CB}"
+        "PackageCode" = "8:{90243420-A19D-4490-A920-B3A004828191}"
         "UpgradeCode" = "8:{9A114EA7-30AB-4B21-ACEF-E37C75FB55B7}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.3"
+        "ProductVersion" = "8:1.0.4"
         "Manufacturer" = "8:Wasatch Photonics"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

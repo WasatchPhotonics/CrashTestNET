@@ -21,6 +21,7 @@ namespace CrashTestNET
         DateTime stopTime = DateTime.Now;
 
         System.Windows.Forms.Timer startupTimer = new System.Windows.Forms.Timer();
+        System.Windows.Forms.Timer displayTimer = new System.Windows.Forms.Timer();
 
         bool initializing;
         bool initialized;
@@ -52,11 +53,8 @@ namespace CrashTestNET
 
             logger.setTextBox(textBoxEventLog);
 
-            Text = string.Format("CrashTestNET {0}", 
+            Text = string.Format("CrashTestNET {0}",
                 Assembly.GetExecutingAssembly().GetName().Version.ToString());
-
-            // help to suppress occasional shutdown errors?
-            // dgvStatus.DataError += dataGridView_DataError;
 
             // apply command-line arguments
             checkBoxVerbose.Checked = args.verbose;
@@ -69,12 +67,15 @@ namespace CrashTestNET
             // haven't exposed these through cmd-line args yet
             checkBoxSerializeSpecs_CheckedChanged(null, null);
 
+            displayTimer.Interval = 100; // 0Hz
+            displayTimer.Tick += tickDisplayTimer;
+
             // if autostarting, click the Initialize button 1sec after launch
             if (args.autoStart)
             {
                 startupTimer.Interval = 1000;
                 startupTimer.Tick += tickStartupTimer;
-                startupTimer.Start(); 
+                startupTimer.Start();
             }
         }
 
@@ -127,7 +128,7 @@ namespace CrashTestNET
             // force synchronization with any in-progress calls to processSpectrum 
             bindingMut.WaitOne();
             {
-                Thread.Sleep(1000); 
+                Thread.Sleep(1000);
 
                 dgvStatus.AutoGenerateColumns = false;
                 dgvStatus.DataSource = null;
@@ -159,7 +160,7 @@ namespace CrashTestNET
             chartAll.Series.Clear();
 
             var driver = WasatchNET.Driver.getInstance();
-            Text = string.Format("CrashTestNET {0} (WasatchNET {1})", 
+            Text = string.Format("CrashTestNET {0} (WasatchNET {1})",
                 Assembly.GetExecutingAssembly().GetName().Version.ToString(),
                 driver.version);
 
@@ -237,7 +238,7 @@ namespace CrashTestNET
                 running = true;
                 buttonStart.Text = "Stop";
                 stopTime = DateTime.Now.AddSeconds(args.durationSec);
-                updateStatus();
+                displayTimer.Start();
                 foreach (var pair in states)
                 {
                     var sn = pair.Key;
@@ -315,46 +316,53 @@ namespace CrashTestNET
                 pair.Value.spec.hasMarker = checkBoxHasMarker.Checked;
         }
 
-        private void dataGridView_DataError(object sender, DataGridViewDataErrorEventArgs anError) =>
-            logger.error("ignoring DGV error");
+        private void checkBoxTrackMetrics_CheckedChanged(object sender, EventArgs e)
+        {
+            foreach (var pair in states)
+                pair.Value.metrics.enabled = checkBoxTrackMetrics.Checked;
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // Methods
         ////////////////////////////////////////////////////////////////////////
 
-        void processSpectrum(string sn, double[] spectrum)
+        private void tickDisplayTimer(Object myObject, EventArgs myEventArgs)
         {
-            var state = states[sn];
-            var x = (double[])state.spec.wavelengths.Clone();
-            var y = (double[])spectrum.Clone();
+            if (!running || shutdownInProgress)
+            {
+                displayTimer.Stop();
+                return;
+            }
 
             if (!bindingMut.WaitOne(5))
                 return;
 
-            if (shutdownInProgress)
-                return;
+            // update time remaining
+            labelTimeRemaining.Text = string.Format("{0:hh\\:mm\\:ss}", stopTime - DateTime.Now);
 
-            try
+            // process each spectrometer
+            foreach (var pair in states)
             {
-                state.series.Points.DataBindXY(x, y);
-                updateStatus();
+                var sn = pair.Key;
+                var state = pair.Value;
+                var spec = state.spec;
+
+                var spectrum = spec.lastSpectrum;
+                if (spectrum is null)
+                    continue;
+
+                // graph the latest spectrum
+                state.series.Points.DataBindXY(spec.wavelengths, spectrum);
+
+                // check for shifts / swaps
+                state.metrics.process(spectrum);
             }
-            catch (Exception e)
-            {
-                logger.error("ignoring exception during processSpectrum: {0}", e);
-            }
+
+            // update dataGridView
+            if (statusSource != null)
+                statusSource.ResetBindings(true);
 
             bindingMut.ReleaseMutex();
-        }
-
-        void updateStatus()
-        {
-            if (!shutdownInProgress)
-            {
-                labelTimeRemaining.Text = string.Format("{0:hh\\:mm\\:ss}", stopTime - DateTime.Now);
-                if (statusSource != null)
-                    statusSource.ResetBindings(true);
-            }
         }
 
         void updateReadDelays()
@@ -380,7 +388,7 @@ namespace CrashTestNET
             var status = state.status;
             var spec = state.spec;
 
-            status.reset();
+            state.reset();
             status.running = true;
 
             Thread.CurrentThread.Name = sn;
@@ -402,7 +410,7 @@ namespace CrashTestNET
                 if (now >= stopTime)
                     break;
 
-                logger.header($"{sn} iteration {state.status.acquisitions}");
+                logger.header($"{sn} iteration {state.status.count}");
 
                 // randomize integration time
                 var integMS = (uint)r.Next(args.integMin, args.integMax);
@@ -413,7 +421,7 @@ namespace CrashTestNET
                 // take acquisition
                 ////////////////////////////////////////////////////////////////
 
-                logger.info($"{sn} iteration {state.status.acquisitions} integration {integMS} ms");
+                logger.info($"{sn} iteration {state.status.count} integration {integMS} ms");
 
                 logger.debug("taking measurement");
                 if (explicitSWTrigger)
@@ -428,10 +436,10 @@ namespace CrashTestNET
                 if (spectrum is null)
                 {
                     status.readFailures++;
-                    status.consecutiveFailures++;
-                    if (status.consecutiveFailures > MAX_CONSECUTIVE_FAILURES)
+                    status.consecFailures++;
+                    if (status.consecFailures >= MAX_CONSECUTIVE_FAILURES)
                     {
-                        logger.error($"{sn}: giving up after {status.consecutiveFailures} consecutive failures");
+                        logger.error($"{sn}: giving up after {status.consecFailures} consecutive failures");
                         break;
                     }
 
@@ -440,11 +448,16 @@ namespace CrashTestNET
                     continue;
                 }
 
-                status.acquisitions++;
-                status.consecutiveFailures = 0;
+                status.count++;
+                status.consecFailures = 0;
 
-                // process measurement
-                buttonStart.BeginInvoke((MethodInvoker)delegate { processSpectrum(sn, spectrum); });
+                // Processing of the measurement (graphing, stats etc) was moved
+                // to the displayTimer so we could collect data from multiple 
+                // instruments at higher speeds than a low-end laptop could 
+                // process and graph it.  No need to do anything with "spectrum",
+                // it's already cached in Spectrometer.lastSpectrum.
+                //
+                // buttonStart.BeginInvoke((MethodInvoker)delegate { processSpectrum(sn, spectrum); });
 
                 if (worker.CancellationPending)
                     break;
@@ -531,6 +544,8 @@ namespace CrashTestNET
             status.running = false;
             logger.debug($"{sn} worker complete");
 
+            state.metrics.report();
+
             var allComplete = true;
             foreach (var pair in states)
             {
@@ -545,6 +560,7 @@ namespace CrashTestNET
             {
                 running = false;
                 buttonStart.Text = "Start";
+                displayTimer.Stop();
 
                 if (shutdownInProgress || args.autoStart)
                 {

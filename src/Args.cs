@@ -15,6 +15,7 @@ namespace CrashTestNET
         public bool verbose;
         public bool throwaways;
         public bool autoStart;
+        public bool trackMetrics;
 
         public Args() { }
 
@@ -25,9 +26,10 @@ namespace CrashTestNET
                 string tok = argv[i];
 
                 // start with unary flags
-                if (tok == "--verbose") verbose = true;
-                if (tok == "--start") autoStart = true;
+                     if (tok == "--verbose") verbose = true;
+                else if (tok == "--start") autoStart = true;
                 else if (tok == "--throwaways") throwaways = true;
+                else if (tok == "--metrics") trackMetrics = true;
                 else if (tok == "--help") return usage();
 
                 // these can have argument
@@ -35,7 +37,7 @@ namespace CrashTestNET
                 {
                     var value = argv[++i];
 
-                    if (tok == "--duration-sec") durationSec = int.Parse(value);
+                         if (tok == "--duration-sec") durationSec = int.Parse(value);
                     else if (tok == "--extra-reads") extraReads = int.Parse(value);
                     else if (tok == "--integ-min") integMin = int.Parse(value);
                     else if (tok == "--integ-max") integMax= int.Parse(value);
@@ -66,6 +68,7 @@ namespace CrashTestNET
               + "--integ-max    maximum integration time (ms) (default 1000)\n"
               + "--iter-min     minimum iteration delay (ms) (default 0)\n"
               + "--iter-max     maximum iteration delay (ms) (default 100)\n"
+              + "--metrics      track metrics\n"
               + "--read-min     minimum readout delay (ms) (default 0)\n"
               + "--read-max     maximum readout delay (ms) (default 0)\n"
               + "--start        start test on launch, then exit when done\n"
