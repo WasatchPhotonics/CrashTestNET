@@ -16,6 +16,7 @@ namespace CrashTestNET
         public bool throwaways;
         public bool autoStart;
         public bool trackMetrics;
+        public bool report;
 
         public Args() { }
 
@@ -30,6 +31,7 @@ namespace CrashTestNET
                 else if (tok == "--start") autoStart = true;
                 else if (tok == "--throwaways") throwaways = true;
                 else if (tok == "--metrics") trackMetrics = true;
+                else if (tok == "--report") report = true;
                 else if (tok == "--help") return usage();
 
                 // these can have argument

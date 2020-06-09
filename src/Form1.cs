@@ -18,6 +18,7 @@ namespace CrashTestNET
 
         Args args;
         Random r = new Random();
+        DateTime startTime = DateTime.Now;
         DateTime stopTime = DateTime.Now;
 
         System.Windows.Forms.Timer startupTimer = new System.Windows.Forms.Timer();
@@ -378,6 +379,30 @@ namespace CrashTestNET
                 pair.Value.spec.autoTrigger = !explicitSWTrigger;
         }
 
+        void report()
+        {
+            if (!args.report)
+                return;
+
+            int acquisitions = 0;
+            int readFailures = 0;
+            int shifts = 0;
+            foreach (var pair in states)
+            {
+                var state = pair.Value;
+                var status = state.status;
+
+                acquisitions += status.count;
+                readFailures += status.readFailures;
+                shifts += status.shifts;
+            }
+
+            var now = DateTime.Now;
+            var elapsedSec = (now - startTime).TotalSeconds;
+
+            Console.WriteLine($"{now} Report: {states.Count} spectrometers collected {acquisitions} measurements with {readFailures} read failures and {shifts} shifts");
+        }
+
         ////////////////////////////////////////////////////////////////////////
         // Background Worker
         ////////////////////////////////////////////////////////////////////////
@@ -563,6 +588,8 @@ namespace CrashTestNET
                 running = false;
                 buttonStart.Text = "Start";
                 displayTimer.Stop();
+
+                report();
 
                 if (shutdownInProgress || args.autoStart)
                 {

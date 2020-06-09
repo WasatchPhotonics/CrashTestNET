@@ -11,15 +11,17 @@ set OLD_DIR=%CD%
 if exist src\bin\x86\Debug (
     cd src\bin\x86\Debug
 )
-echo Running in %CD%
 
-del CrashTestNET.log 2>NUL
+del /f %LOGFILE% 2>NUL
 
 for /l %%i in (1, 1, %ITERATIONS%) do (
     echo Iteration %%i
     echo Iteration %%i >> %LOGFILE%
-    CrashTestNET --start --duration-sec 60 --integ-min 10 --integ-max 25 --metrics >> %LOGFILE%
+    CrashTestNET --start --duration-sec 20 --integ-min 10 --integ-max 25 --metrics --report >> %LOGFILE%
 )
 
 cd %OLD_DIR%
+
+grep Report %LOGFILE%
+
 echo Done running CrashTestNET

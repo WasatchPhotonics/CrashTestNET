@@ -1,3 +1,5 @@
+- 2020-06-09 1.0.5
+    - added --report
 - 2020-06-05 1.0.4
     - added Metrics (currently hard-coded to confirm left-side integral > right-side integral)
     - added displayTimer to decouple graphing/processing speed from data collection
