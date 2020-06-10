@@ -30,12 +30,17 @@ file, when run from batch scripts.
 Two batch scripts are provided for automated command-line execution, if start/stop
 (enumeration) behavior is being tested.
 
-- run-loop.bat (lets each iteration exit normally)
-- run-ragged.bat (abruptly and randomly kills each iteration)
+- run-loop.bat
+    - allows each execution of CrashTestNET to close normally and shutdown 
+      cleanly
+    - spectrometers are expected to function and resume without error across 
+      executions
 
-## Backlog
-
-- track wavelength of boxcar-10 maxima vs shift threshold
+- run-ragged.bat 
+    - abruptly and randomly kills each iteration to deliberately disrupt 
+      communication state
+    - USB spectrometers may "fall over" at some point during this test and 
+      require power-cycle / reset
 
 ## Changelog
 
