@@ -4,14 +4,7 @@
 
 A program to try to crash spectrometers using Wasatch.NET.
 
-## Operator's Manual
-
-- see [Manual](README_MANUAL.md)
-
-## Developer Notes
-
-- see [Maintenance](README_MAINTENANCE.md)
-
-## Changelog
-
-- see [Changelog](README_CHANGELOG.md)
+- [Manual](README_MANUAL.md)
+- [Maintenance](README_MAINTENANCE.md)
+- [Backlog](README_BACKLOG.md)
+- [Changelog](README_CHANGELOG.md)
