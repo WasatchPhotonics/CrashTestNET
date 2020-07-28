@@ -1,6 +1,14 @@
+![GUI](https://github.com/WasatchPhotonics/CrashTestNET/raw/master/screenshots/gui-01.png)
+
 # CrashTestNET
 
 A program to try to crash spectrometers using Wasatch.NET.
+
+# Operator's Manual
+
+- see [Manual](README_MANUAL.md)
+
+# Developer Notes
 
 ## Theory of Operation
 
@@ -20,27 +28,6 @@ appropriate or useful for the majority of CrashTestNET's use cases.
 At the moment I'm going with BackgroundWorkers, not because I don't understand 
 async methods, but because I want everything segmented into proper Threads (vs
 Tasks).  We may add a Task option down the road.
-
-## Command-Line
-
-Unusually for a WinForms GUI, this app runs with a visible Console window (DOS 
-shell).  This allows Console output to be viewed in the shell, and captured to a
-file, when run from batch scripts.
-
-Two batch scripts are provided for automated command-line execution, if start/stop
-(enumeration) behavior is being tested.
-
-- run-loop.bat
-    - allows each execution of CrashTestNET to close normally and shutdown 
-      cleanly
-    - spectrometers are expected to function and resume without error across 
-      executions
-
-- run-ragged.bat 
-    - abruptly and randomly kills each iteration to deliberately disrupt 
-      communication state
-    - USB spectrometers may "fall over" at some point during this test and 
-      require power-cycle / reset
 
 ## Changelog
 
