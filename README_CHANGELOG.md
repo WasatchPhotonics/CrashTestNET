@@ -1,3 +1,6 @@
+- 2020-08-03 1.0.6
+    - default GUI logfile to CrashTestNETGUI.log
+    - auto-rotate Event Log textbox after 32MB
 - 2020-06-09 1.0.5
     - added --report
 - 2020-06-05 1.0.4

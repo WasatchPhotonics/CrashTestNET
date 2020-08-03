@@ -11,21 +11,26 @@ REM may be improved in subsequent versions.
 
 set ITERATIONS=%1
 
+set LOGFILE=%CD%\CrashTestNET.log
 set OLD_DIR=%CD%
+
 if exist src\bin\x86\Debug (
     cd src\bin\x86\Debug
 )
 echo Running in %CD%
 
-del CrashTestNET.log 2>NUL
+del /f %LOGFILE% 2>NUL
 
 for /l %%i in (1, 1, %ITERATIONS%) do (
     set /a TIMEOUT_SEC=%RANDOM% * 50 / 32768 + 10
 
-    echo Iteration %%i (timeout %TIMEOUT_SEC% sec)
-    echo Iteration %%i (timeout %TIMEOUT_SEC% sec) >> CrashTestNET.log
-    timeout %TIMEOUT_SEC% CrashTestNET --start --duration-sec 60 >> CrashTestNET.log
+    echo Iteration %%i of %ITERATIONS% (timeout %TIMEOUT_SEC% sec)
+    echo Iteration %%i of %ITERATIONS% (timeout %TIMEOUT_SEC% sec) >> %LOGFILE%
+    timeout %TIMEOUT_SEC% CrashTestNET --start --duration-sec 60 --metrics --report >> %LOGFILE%
 )
 
 cd %OLD_DIR%
+
+grep Report %LOGFILE%
+
 echo Done crashing CrashTestNET

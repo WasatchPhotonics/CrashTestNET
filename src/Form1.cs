@@ -13,6 +13,7 @@ namespace CrashTestNET
     {
         // these have not yet been moved to Args
         const int MAX_CONSECUTIVE_FAILURES = 3;
+        const int MAX_EVENT_LOG_LEN = 33554432; // 32MB
         bool serializeSpecs = false;
         bool explicitSWTrigger = false;
 
@@ -52,6 +53,7 @@ namespace CrashTestNET
 
             this.args = args;
 
+            logger.setPathname("CrashTestNETGUI.log"); // to distinguish from any logs captured from cmd-line scripts
             logger.setTextBox(textBoxEventLog);
 
             Text = string.Format("CrashTestNET {0}",
@@ -68,7 +70,7 @@ namespace CrashTestNET
             // haven't exposed these through cmd-line args yet
             checkBoxSerializeSpecs_CheckedChanged(null, null);
 
-            displayTimer.Interval = 100; // 0Hz
+            displayTimer.Interval = 100; // ms, so 10Hz
             displayTimer.Tick += tickDisplayTimer;
 
             // if autostarting, click the Initialize button 1sec after launch
@@ -365,6 +367,15 @@ namespace CrashTestNET
             if (statusSource != null)
                 statusSource.ResetBindings(true);
 
+            // truncate Event Log textbox if it grows overlarge (delete top half)
+            // (could probably roll this into WasatchNET.Logger)
+            if (textBoxEventLog.Text.Length >= MAX_EVENT_LOG_LEN)
+            {
+                logger.debug("truncating event log");
+                textBoxEventLog.Text = textBoxEventLog.Text.Substring(MAX_EVENT_LOG_LEN / 2);
+                logger.debug("event log truncated");
+            }
+
             bindingMut.ReleaseMutex();
         }
 
@@ -516,16 +527,16 @@ namespace CrashTestNET
                 logger.debug("performing extraRead {0} ({1} of {2})", type, i + 1, args.extraReads);
                 switch (type)
                 {
-                    case 0: logger.debug("extraRead: actualFrames = {0}", spec.actualFrames); break;
-                    case 1: logger.debug("extraRead: actualIntegrationTimeUS = {0}", spec.actualIntegrationTimeUS); break;
-                    case 2: logger.debug("extraRead: primaryADC = 0x{0:x4}", spec.primaryADC); break;
-                    case 3: logger.debug("extraRead: secondaryADC = 0x{0:x4}", spec.secondaryADC); break;
-                    case 4: logger.debug("extraRead: batteryCharging = {0}", spec.batteryCharging); break;
-                    case 5: logger.debug("extraRead: batteryPercentage = {0}", spec.batteryPercentage); break;
-                    case 6: logger.debug("extraRead: continuousAcquisitionEnable = {0}", spec.continuousAcquisitionEnable); break;
-                    case 7: logger.debug("extraRead: continuousFrames = {0}", spec.continuousFrames); break;
-                    case 8: logger.debug("extraRead: detectorGain = {0:f2}", spec.detectorGain); break;
-                    case 9: logger.debug("extraRead: detectorOffset = {0}", spec.detectorOffset); break;
+                    case  0: logger.debug("extraRead: actualFrames = {0}", spec.actualFrames); break;
+                    case  1: logger.debug("extraRead: actualIntegrationTimeUS = {0}", spec.actualIntegrationTimeUS); break;
+                    case  2: logger.debug("extraRead: primaryADC = 0x{0:x4}", spec.primaryADC); break;
+                    case  3: logger.debug("extraRead: secondaryADC = 0x{0:x4}", spec.secondaryADC); break;
+                    case  4: logger.debug("extraRead: batteryCharging = {0}", spec.batteryCharging); break;
+                    case  5: logger.debug("extraRead: batteryPercentage = {0}", spec.batteryPercentage); break;
+                    case  6: logger.debug("extraRead: continuousAcquisitionEnable = {0}", spec.continuousAcquisitionEnable); break;
+                    case  7: logger.debug("extraRead: continuousFrames = {0}", spec.continuousFrames); break;
+                    case  8: logger.debug("extraRead: detectorGain = {0:f2}", spec.detectorGain); break;
+                    case  9: logger.debug("extraRead: detectorOffset = {0}", spec.detectorOffset); break;
                     case 10: logger.debug("extraRead: detectorSensingThreshold = {0}", spec.detectorSensingThreshold); break;
                     case 11: logger.debug("extraRead: detectorSensingThresholdEnabled = {0}", spec.detectorSensingThresholdEnabled); break;
                     case 12: logger.debug("extraRead: detectorTECEnabled = {0}", spec.detectorTECEnabled); break;
